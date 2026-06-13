@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Following Dominic — World Cup 2026</title>
+<meta name="description" content="Track Dominic's World Cup 2026 journey across the USA and Mexico">
+<meta name="theme-color" content="#C8102E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#C8102E;--red-light:#FEE2E2;--red-mid:rgba(200,16,46,0.12);
+  --navy:#012169;--navy-light:#EEF2FF;
+  --white:#FFFFFF;--off-white:#F8F9FF;--surface:#FFFFFF;
+  --border:#E8ECF5;--border-mid:#C8D0E8;
+  --text-primary:#012169;--text-secondary:#4A5680;--text-muted:#8892B0;
+  --font-display:'Bebas Neue','Impact',sans-serif;
+  --font-body:'Inter',system-ui,sans-serif;
+}
+html{background:var(--off-white);color:var(--text-primary);font-family:var(--font-body);font-size:16px}
+body{min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+.site-header{background:var(--navy);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:200}
+.site-title{font-family:var(--font-display);font-size:22px;letter-spacing:.04em;color:var(--white);line-height:1}
+.site-title span{color:var(--red)}
+.route-badge{font-size:11px;font-weight:500;padding:4px 10px;border-radius:99px;border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.7);letter-spacing:.04em;transition:all .4s}
+.route-badge.route-1st{border-color:#FFD700;color:#FFD700}
+.route-badge.route-2nd{border-color:#5DCAA5;color:#5DCAA5}
+
+/* CONFETTI */
+.confetti-piece{position:fixed;width:10px;height:10px;top:-20px;border-radius:2px;animation:confetti-fall linear forwards;pointer-events:none;z-index:9999}
+@keyframes confetti-fall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* MATCHDAY TAKEOVER */
+.matchday-takeover{background:var(--red);text-align:center;padding:16px 20px;display:none;position:relative;overflow:hidden}
+.matchday-takeover.visible{display:block}
+.takeover-flag{font-size:32px;display:block;margin-bottom:4px}
+.takeover-title{font-family:var(--font-display);font-size:36px;letter-spacing:.12em;color:var(--white);line-height:1;animation:pulse-text 2s ease-in-out infinite}
+@keyframes pulse-text{0%,100%{opacity:1}50%{opacity:.75}}
+.takeover-sub{font-size:13px;color:rgba(255,255,255,.8);margin-top:4px;font-weight:500;letter-spacing:.04em}
+.takeover-ko{font-family:var(--font-display);font-size:18px;color:rgba(255,255,255,.9);margin-top:6px;letter-spacing:.08em}
+
+/* HERO */
+.hero{background:var(--navy);padding:0;overflow:hidden;position:relative}
+.hero-postcard{width:100%;height:200px;object-fit:cover;display:block;position:relative}
+.postcard-overlay{position:absolute;bottom:0;left:0;right:0;padding:16px 20px;background:linear-gradient(transparent,rgba(1,33,105,0.92))}
+.hero-eyebrow{font-size:10px;font-weight:600;letter-spacing:.12em;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:2px}
+.hero-city{font-family:var(--font-display);font-size:48px;line-height:.95;letter-spacing:.02em;color:var(--white)}
+.hero-date{font-size:13px;color:rgba(255,255,255,.55);margin-top:4px}
+.hero-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 20px 16px;background:var(--navy)}
+.hero-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:11px 13px}
+.hero-card.full{grid-column:1/-1}
+.hero-card-label{font-size:10px;font-weight:600;letter-spacing:.1em;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:3px}
+.hero-card-value{font-size:14px;font-weight:500;color:var(--white);line-height:1.45}
+.hero-card-value.match-val{color:#FF8A8A}
+.hero-card-value.flight-val{color:#82CFBA}
+.hero-card-value.weather-val{font-size:20px;font-weight:300}
+.hero-card-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px}
+
+/* LOCAL TIME */
+.local-time-strip{background:rgba(255,255,255,.06);border-top:1px solid rgba(255,255,255,.08);padding:8px 20px;display:flex;align-items:center;justify-content:space-between}
+.local-time-label{font-size:11px;color:rgba(255,255,255,.45);font-weight:500;letter-spacing:.06em;text-transform:uppercase}
+.local-time-value{font-family:var(--font-display);font-size:22px;color:var(--white);letter-spacing:.06em;line-height:1}
+.local-time-tz{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px;text-align:right}
+
+/* COUNTDOWN */
+.countdown-strip{background:var(--red);padding:10px 20px;display:none;align-items:center;justify-content:space-between}
+.countdown-strip.visible{display:flex}
+.countdown-label{font-size:10px;font-weight:600;letter-spacing:.1em;color:rgba(255,255,255,.75);text-transform:uppercase}
+.countdown-match{font-size:12px;color:rgba(255,255,255,.9);margin-top:1px;font-weight:500}
+.countdown-timer{font-family:var(--font-display);font-size:30px;color:var(--white);letter-spacing:.06em;line-height:1}
+
+/* MILES TRACKER */
+.miles-strip{background:var(--navy-light);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:12px}
+.miles-icon{font-size:20px}
+.miles-label{font-size:11px;color:var(--text-muted);font-weight:500}
+.miles-value{font-family:var(--font-display);font-size:22px;color:var(--navy);letter-spacing:.02em;line-height:1}
+.miles-sub{font-size:10px;color:var(--text-muted);margin-top:1px}
+.miles-bar-wrap{flex:1;height:6px;background:var(--border);border-radius:99px;overflow:hidden;margin-left:8px}
+.miles-bar{height:100%;background:var(--navy);border-radius:99px;transition:width 1s ease}
+
+/* TABS */
+.tabs{display:flex;border-bottom:2px solid var(--border);padding:0 20px;overflow-x:auto;scrollbar-width:none;background:var(--white);position:sticky;top:54px;z-index:100}
+.tabs::-webkit-scrollbar{display:none}
+.tab{font-size:13px;font-weight:500;color:var(--text-muted);padding:13px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color .2s,border-color .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-body)}
+.tab:hover{color:var(--navy)}
+.tab.active{color:var(--navy);border-bottom-color:var(--red);font-weight:600}
+
+/* LOADING */
+.loading-wrap{padding:40px 20px;text-align:center}
+.loading-spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--text-muted)}
+.error-wrap{padding:24px 20px}
+.error-card{background:#FEF2F2;border:1px solid #FCA5A5;border-radius:10px;padding:16px;font-size:13px;color:#991B1B;line-height:1.6}
+
+/* TIMELINE */
+.timeline-wrap{padding:16px 20px}
+.tl-item{display:grid;grid-template-columns:48px 1fr;gap:0 12px;margin-bottom:4px}
+.tl-left{display:flex;flex-direction:column;align-items:center}
+.tl-date{font-size:10px;color:var(--text-muted);text-align:center;padding-top:11px;line-height:1.3;font-weight:500}
+.tl-dot{width:10px;height:10px;border-radius:50%;background:var(--border-mid);border:2px solid var(--off-white);margin-top:3px;flex-shrink:0}
+.tl-dot.is-match{background:var(--red)}
+.tl-dot.is-flight{background:#1D9E75}
+.tl-dot.is-today{background:var(--navy);box-shadow:0 0 0 4px var(--navy-light)}
+.tl-line{width:1px;flex:1;background:var(--border);min-height:8px;margin-top:2px}
+.tl-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 13px;margin-bottom:4px;cursor:pointer;transition:border-color .15s}
+.tl-card:hover{border-color:var(--border-mid)}
+.tl-card.is-today{border-color:var(--navy);border-width:1.5px;background:var(--navy-light)}
+.tl-card.is-match{border-color:#FCA5A5;border-width:1.5px;background:#FFF5F5}
+.tl-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.tl-city{font-size:14px;font-weight:600;color:var(--text-primary)}
+.tl-summary{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.tl-badges{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.tl-badge{font-size:10px;font-weight:600;letter-spacing:.05em;padding:2px 7px;border-radius:99px;text-transform:uppercase;white-space:nowrap}
+.badge-match{background:var(--red-light);color:#9B0E22;border:1px solid #FCA5A5}
+.badge-flight{background:#DCFCE7;color:#166534;border:1px solid #86EFAC}
+.badge-special{background:#FEF3C7;color:#92400E;border:1px solid #FCD34D}
+.badge-today{background:var(--navy-light);color:var(--navy);border:1px solid #A5B4FC}
+.tl-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:13px;color:var(--text-secondary);line-height:1.65}
+.tl-detail.open{display:block}
+.detail-pill{display:inline-flex;align-items:center;gap:4px;margin-top:7px;margin-right:5px;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:500}
+.pill-match{background:var(--red-light);color:#9B0E22;border:1px solid #FCA5A5}
+.pill-flight{background:#DCFCE7;color:#166534;border:1px solid #86EFAC}
+
+/* MATCH RESULT badge on timeline */
+.match-result{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 12px;border-radius:8px;font-size:13px;font-weight:600}
+.result-win{background:#DCFCE7;color:#166534;border:1px solid #86EFAC}
+.result-draw{background:#FEF3C7;color:#92400E;border:1px solid #FCD34D}
+.result-loss{background:var(--red-light);color:#9B0E22;border:1px solid #FCA5A5}
+
+/* MAP */
+.map-wrap{padding:16px 20px}
+.map-container{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface)}
+.map-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.map-title{font-size:13px;font-weight:600;color:var(--text-primary)}
+.map-legend{display:flex;gap:12px}
+.map-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted)}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+#leaflet-map{height:420px;width:100%}
+
+/* WEATHER FORECAST */
+.forecast-wrap{padding:0 20px 16px}
+.forecast-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.forecast-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center}
+.forecast-day{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.forecast-emoji{font-size:22px;display:block;margin:4px 0}
+.forecast-temp{font-size:13px;font-weight:500;color:var(--text-primary)}
+.forecast-desc{font-size:10px;color:var(--text-muted);margin-top:2px}
+
+/* MATCH HISTORY */
+.history-wrap{padding:16px 20px}
+.history-title{font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--text-muted);text-transform:uppercase;margin-bottom:12px}
+.history-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.history-flag{font-size:22px}
+.history-info{flex:1}
+.history-match{font-size:13px;font-weight:600;color:var(--text-primary)}
+.history-meta{font-size:11px;color:var(--text-muted);margin-top:2px}
+.history-score{font-family:var(--font-display);font-size:28px;letter-spacing:.04em;color:var(--navy);line-height:1}
+.history-result{font-size:10px;font-weight:600;text-align:center;margin-top:2px;border-radius:4px;padding:2px 6px}
+.hr-win{color:#166534;background:#DCFCE7}
+.hr-draw{color:#92400E;background:#FEF3C7}
+.hr-loss{color:#9B0E22;background:#FEE2E2}
+.history-pending{font-size:12px;color:var(--text-muted);text-align:center;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+
+/* ROUTE PANEL */
+.route-panel{padding:16px 20px}
+.route-section{margin-bottom:24px}
+.route-heading{font-family:var(--font-display);font-size:20px;letter-spacing:.04em;color:var(--text-primary);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.route-sub{font-size:12px;color:var(--text-muted);margin-bottom:12px}
+.rt-badge{font-size:10px;font-weight:600;font-family:var(--font-body);padding:3px 8px;border-radius:99px;letter-spacing:.05em}
+.rt-1st{background:#FEF3C7;color:#92400E;border:1px solid #FCD34D}
+.rt-2nd{background:#DCFCE7;color:#166534;border:1px solid #86EFAC}
+.route-stops{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}
+.route-stop{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border)}
+.route-stop:last-child{border-bottom:none}
+.rs-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.rs-city{font-size:14px;font-weight:600;color:var(--text-primary)}
+.rs-dates{font-size:12px;color:var(--text-muted);margin-top:1px}
+.rs-match{font-size:11px;color:var(--red);margin-top:3px;font-weight:600}
+.route-note{font-size:12px;color:var(--text-muted);padding:12px 0;line-height:1.6}
+
+/* ABOUT */
+.about-panel{padding:16px 20px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.stat-card{background:var(--navy);border-radius:10px;padding:14px;text-align:center}
+.stat-num{font-family:var(--font-display);font-size:40px;color:var(--white);line-height:1}
+.stat-label{font-size:11px;color:rgba(255,255,255,.55);margin-top:4px;font-weight:500;letter-spacing:.04em}
+.about-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.about-card h3{font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:6px}
+.about-card p{font-size:13px;color:var(--text-secondary);line-height:1.65}
+
+/* FOOTER */
+.site-footer{padding:20px;text-align:center;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border);margin-top:8px}
+.status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#22C55E;margin-right:5px;vertical-align:middle;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.panel{display:none}
+.panel.active{display:block}
+
+@media(max-width:380px){.hero-city{font-size:36px}.hero-cards{grid-template-columns:1fr}.forecast-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-title">Following <span>Dominic</span></div>
+  <div class="route-badge" id="route-badge">Loading…</div>
+</header>
+
+<!-- MATCHDAY TAKEOVER (replaces england banner on match days) -->
+<div class="matchday-takeover" id="matchday-takeover">
+  <span class="takeover-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+  <div class="takeover-title">C'mon England!</div>
+  <div class="takeover-sub" id="takeover-sub"></div>
+  <div class="takeover-ko" id="takeover-ko"></div>
+</div>
+
+<!-- HERO with postcard image -->
+<div class="hero" id="hero">
+  <div style="position:relative">
+    <canvas id="postcard-canvas" style="width:100%;height:200px;display:block"></canvas>
+    <div class="postcard-overlay">
+      <div class="hero-eyebrow"><span class="status-dot"></span>Live trip tracker</div>
+      <div class="hero-city" id="hero-city">Loading…</div>
+      <div class="hero-date" id="hero-date"></div>
+    </div>
+  </div>
+  <div class="hero-cards" id="hero-cards">
+    <div class="hero-card full"><div class="hero-card-label">Today</div><div class="hero-card-value">Fetching latest…</div></div>
+  </div>
+  <div class="local-time-strip" id="local-time-strip">
+    <div>
+      <div class="local-time-label">Local time in <span id="local-time-city">—</span></div>
+      <div class="local-time-tz" id="local-time-tz"></div>
+    </div>
+    <div class="local-time-value" id="local-time-value">--:--</div>
+  </div>
+</div>
+
+<!-- MILES TRACKER -->
+<div class="miles-strip" id="miles-strip">
+  <div class="miles-icon">✈️</div>
+  <div>
+    <div class="miles-label">Miles travelled so far</div>
+    <div class="miles-value" id="miles-value">0</div>
+    <div class="miles-sub" id="miles-sub">of ~12,400 total miles</div>
+  </div>
+  <div class="miles-bar-wrap"><div class="miles-bar" id="miles-bar" style="width:0%"></div></div>
+</div>
+
+<!-- COUNTDOWN -->
+<div class="countdown-strip" id="countdown-strip">
+  <div>
+    <div class="countdown-label">Next England match</div>
+    <div class="countdown-match" id="countdown-match"></div>
+  </div>
+  <div class="countdown-timer" id="countdown-timer">--:--</div>
+</div>
+
+<!-- 3-DAY WEATHER FORECAST -->
+<div class="forecast-wrap" id="forecast-wrap" style="display:none;padding-top:16px">
+  <div class="forecast-grid" id="forecast-grid"></div>
+</div>
+
+<nav class="tabs">
+  <button class="tab active" onclick="showTab('timeline',this)">Timeline</button>
+  <button class="tab" onclick="showTab('map',this)">Map</button>
+  <button class="tab" onclick="showTab('history',this)">Results</button>
+  <button class="tab" onclick="showTab('route',this)">Route</button>
+  <button class="tab" onclick="showTab('about',this)">About</button>
+</nav>
+
+<div id="tab-timeline" class="panel active"><div id="timeline-inner"></div></div>
+
+<div id="tab-map" class="panel">
+  <div class="map-wrap">
+    <div class="map-container">
+      <div class="map-header">
+        <div class="map-title">Dominic's route</div>
+        <div class="map-legend">
+          <div class="map-legend-item"><div class="legend-dot" style="background:var(--red)"></div>Here now</div>
+          <div class="map-legend-item"><div class="legend-dot" style="background:var(--navy)"></div>Visited</div>
+          <div class="map-legend-item"><div class="legend-dot" style="background:var(--border-mid)"></div>Upcoming</div>
+        </div>
+      </div>
+      <div id="leaflet-map"></div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-history" class="panel">
+  <div class="history-wrap">
+    <div class="history-title">England match results</div>
+    <div id="history-inner"></div>
+  </div>
+</div>
+
+<div id="tab-route" class="panel"><div class="route-panel" id="route-panel"></div></div>
+
+<div id="tab-about" class="panel">
+  <div class="about-panel">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num">21</div><div class="stat-label">Days away</div></div>
+      <div class="stat-card"><div class="stat-num">6</div><div class="stat-label">Cities</div></div>
+      <div class="stat-card"><div class="stat-num">5</div><div class="stat-label">England matches</div></div>
+      <div class="stat-card"><div class="stat-num">1</div><div class="stat-label">World Cup</div></div>
+    </div>
+    <div class="about-card"><h3>The trip</h3><p>Dominic is following England through the 2026 FIFA World Cup across the USA and Mexico — from the group stage in Boston and New York, through the knockouts in Atlanta and Mexico City, all the way to the Quarter-Final in Miami. The trip runs 22 June to 12 July 2026.</p></div>
+    <div class="about-card"><h3>The route</h3><p>The exact knockout route depends on whether England finish 1st or 2nd in Group L on 27 June. If 1st: Atlanta → Mexico City → Miami. If 2nd: Toronto → Dallas. This tracker updates automatically.</p></div>
+    <div class="about-card"><h3>This page</h3><p>Updates automatically every time it loads — pulling the latest itinerary directly from Dominic's planning spreadsheet. Weather is live. Route switches automatically after 27 June based on England's result.</p></div>
+  </div>
+</div>
+
+<footer class="site-footer">Updates automatically · Built with ❤️ for Mum</footer>
+
+<script>
+const SHEETS_KEY='AIzaSyA32nyJoi_pf8E9PbY_TiVICjGEQlkY1sY';
+const SHEET_ID='1j_YJwB1ox3A43Bv8TBhohr4Mh3nLWFguJlPEUgEve-w';
+const FB_KEY='fc038b0fe93c4677b8f1f76b71de5397';
+let currentRoute='1st';
+let itinRows=[],flightRows=[];
+
+// ── CITY DATA ─────────────────────────────────────────────────────────────────
+const CITY_DATA={
+  'BOSTON':{tz:'America/New_York',coords:[42.36,-71.06],colors:['#1B2A4A','#C8341A','#E8C87A'],skyline:'boston'},
+  'NYC':{tz:'America/New_York',coords:[40.71,-74.01],colors:['#1A1A2E','#E8A020','#4A90D9'],skyline:'nyc'},
+  'NEW YORK':{tz:'America/New_York',coords:[40.71,-74.01],colors:['#1A1A2E','#E8A020','#4A90D9'],skyline:'nyc'},
+  'ATLANTA':{tz:'America/New_York',coords:[33.75,-84.39],colors:['#1A2E1A','#C8341A','#4A8C4A'],skyline:'atlanta'},
+  'MEXICO CITY':{tz:'America/Mexico_City',coords:[19.43,-99.13],colors:['#2A1A0A','#C87820','#8C4A20'],skyline:'mexico'},
+  'MEXICO':{tz:'America/Mexico_City',coords:[19.43,-99.13],colors:['#2A1A0A','#C87820','#8C4A20'],skyline:'mexico'},
+  'MIAMI':{tz:'America/New_York',coords:[25.77,-80.19],colors:['#0A1A2E','#20A8C8','#F0C040'],skyline:'miami'},
+  'TORONTO':{tz:'America/Toronto',coords:[43.65,-79.38],colors:['#1A1A2E','#C8341A','#888'],skyline:'toronto'},
+  'DALLAS':{tz:'America/Chicago',coords:[32.78,-96.80],colors:['#1A0A0A','#8C3A20','#C8A040'],skyline:'dallas'},
+  'LONDON':{tz:'Europe/London',coords:[51.51,-0.13],colors:['#0A0A1A','#4A4A8C','#C8C8E8'],skyline:'london'},
+};
+
+// ── CITY POSTCARD CANVAS ──────────────────────────────────────────────────────
+const SKYLINES={
+  boston:(ctx,w,h,c)=>{
+    ctx.fillStyle=c[0];ctx.fillRect(0,0,w,h);
+    // Stars
+    for(let i=0;i<60;i++){ctx.fillStyle='rgba(255,255,255,'+(Math.random()*.6+.2)+')';ctx.fillRect(Math.random()*w,Math.random()*h*.6,1.5,1.5);}
+    // Water
+    ctx.fillStyle='#1A3A5A';ctx.fillRect(0,h*.72,w,h*.28);
+    // Buildings
+    const blds=[[.05,.35,.1,.45],[.15,.25,.08,.45],[.23,.3,.12,.45],[.35,.15,.1,.45],[.45,.2,.08,.45],[.53,.28,.14,.45],[.67,.18,.1,.45],[.77,.25,.08,.45],[.85,.3,.1,.45]];
+    blds.forEach(([x,y,bw,bh])=>{
+      ctx.fillStyle=`hsl(220,30%,${Math.floor(15+Math.random()*15)}%)`;
+      ctx.fillRect(x*w,y*h,bw*w,(bh-y)*h);
+      for(let wy=y+.03;wy<bh-.02;wy+=.07)for(let wx=x+.01;wx<x+bw-.01;wx+=.03){
+        ctx.fillStyle=Math.random()>.4?'rgba(255,220,120,.7)':'rgba(50,50,80,.8)';
+        ctx.fillRect(wx*w,wy*h,bw*w*.25,h*.03);
+      }
+    });
+    // Reflection
+    ctx.fillStyle='rgba(255,220,100,.15)';ctx.fillRect(.35*w,h*.72,w*.1,h*.28);
+    label(ctx,w,h,'Boston',c[1]);
+  },
+  nyc:(ctx,w,h,c)=>{
+    ctx.fillStyle=c[0];ctx.fillRect(0,0,w,h);
+    for(let i=0;i<80;i++){ctx.fillStyle='rgba(255,255,255,'+(Math.random()*.7+.1)+')';ctx.fillRect(Math.random()*w,Math.random()*h*.55,1.5,1.5);}
+    ctx.fillStyle='#0A1A2E';ctx.fillRect(0,h*.7,w,h*.3);
+    const blds=[[.02,.2,.06,.5],[.08,.05,.05,.5],[.13,.15,.09,.5],[.22,.08,.07,.5],[.29,.18,.06,.5],[.35,.03,.08,.5],[.43,.12,.06,.5],[.49,.06,.1,.5],[.59,.2,.07,.5],[.66,.1,.06,.5],[.72,.15,.08,.5],[.80,.22,.07,.5],[.87,.17,.09,.5]];
+    blds.forEach(([x,y,bw,bh])=>{
+      ctx.fillStyle=`hsl(220,20%,${Math.floor(12+Math.random()*18)}%)`;
+      ctx.fillRect(x*w,y*h,bw*w,(bh-y)*h);
+      for(let wy=y+.02;wy<bh-.02;wy+=.06)for(let wx=x+.005;wx<x+bw-.005;wx+=.025){
+        ctx.fillStyle=Math.random()>.35?'rgba(255,200,80,.8)':'rgba(30,30,60,.9)';
+        ctx.fillRect(wx*w,wy*h,bw*w*.3,h*.025);
+      }
+    });
+    ctx.fillStyle=c[1];ctx.fillRect(.35*w,h*.03,3,h*.1);
+    label(ctx,w,h,'New York',c[1]);
+  },
+  atlanta:(ctx,w,h,c)=>{
+    ctx.fillStyle=c[0];ctx.fillRect(0,0,w,h);
+    for(let i=0;i<50;i++){ctx.fillStyle='rgba(255,255,255,'+(Math.random()*.5+.1)+')';ctx.fillRect(Math.random()*w,Math.random()*h*.5,1.5,1.5);}
+    ctx.fillStyle='#0A1A0A';ctx.fillRect(0,h*.75,w,h*.25);
+    const blds=[[.1,.3,.08,.5],[.18,.2,.06,.5],[.24,.25,.1,.5],[.34,.15,.07,.5],[.41,.22,.09,.5],[.5,.18,.08,.5],[.58,.28,.1,.5],[.68,.2,.07,.5],[.75,.3,.09,.5],[.84,.25,.08,.5]];
+    blds.forEach(([x,y,bw,bh])=>{
+      ctx.fillStyle=`hsl(130,15%,${Math.floor(14+Math.random()*14)}%)`;
+      ctx.fillRect(x*w,y*h,bw*w,(bh-y)*h);
+    });
+    label(ctx,w,h,'Atlanta',c[1]);
+  },
+  mexico:(ctx,w,h,c)=>{
+    // Sunset sky
+    ctx.fillStyle='#2A0A0A';ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='rgba(200,80,20,.3)';ctx.fillRect(0,h*.3,w,h*.4);
+    for(let i=0;i<40;i++){ctx.fillStyle='rgba(255,255,200,'+(Math.random()*.5+.2)+')';ctx.fillRect(Math.random()*w,Math.random()*h*.4,1.5,1.5);}
+    // Moon
+    ctx.fillStyle='rgba(255,240,180,.9)';ctx.beginPath();ctx.arc(.8*w,.15*h,18,0,Math.PI*2);ctx.fill();
+    // Pyramid silhouette
+    ctx.fillStyle='#1A0A00';
+    ctx.beginPath();ctx.moveTo(.3*w,h*.75);ctx.lineTo(.5*w,h*.3);ctx.lineTo(.7*w,h*.75);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(.05*w,h*.75);ctx.lineTo(.2*w,h*.48);ctx.lineTo(.35*w,h*.75);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#100800';ctx.fillRect(0,h*.75,w,h*.25);
+    label(ctx,w,h,'Mexico City',c[1]);
+  },
+  miami:(ctx,w,h,c)=>{
+    ctx.fillStyle=c[0];ctx.fillRect(0,0,w,h);
+    // Ocean gradient
+    ctx.fillStyle='#051828';ctx.fillRect(0,h*.5,w,h*.5);
+    ctx.fillStyle='rgba(32,168,200,.4)';ctx.fillRect(0,h*.55,w,h*.15);
+    for(let i=0;i<40;i++){ctx.fillStyle='rgba(255,255,255,'+(Math.random()*.6+.1)+')';ctx.fillRect(Math.random()*w,Math.random()*h*.45,1.5,1.5);}
+    // Art deco buildings
+    const blds=[[.05,.3,.07,.55],[.12,.2,.05,.55],[.17,.35,.09,.55],[.26,.22,.06,.55],[.32,.28,.08,.55],[.4,.18,.06,.55],[.46,.25,.07,.55],[.53,.3,.09,.55],[.62,.22,.07,.55],[.69,.28,.08,.55],[.77,.2,.06,.55],[.83,.32,.08,.55],[.91,.25,.06,.55]];
+    blds.forEach(([x,y,bw,bh],i)=>{
+      const hue=[180,200,280,320][i%4];
+      ctx.fillStyle=`hsl(${hue},40%,${Math.floor(20+Math.random()*15)}%)`;
+      ctx.fillRect(x*w,y*h,bw*w,(bh-y)*h);
+    });
+    // Palm tree
+    ctx.fillStyle='#1A3A1A';ctx.fillRect(.88*w,h*.4,4,h*.2);
+    ctx.fillStyle='#2A5A2A';
+    [[-.04,-.08],[-.02,-.06],[.0,-.1],[.02,-.06],[.04,-.08]].forEach(([dx,dy])=>{
+      ctx.beginPath();ctx.ellipse((.88+dx)*w,(h*.4+dy*h),18,8,-0.5,0,Math.PI*2);ctx.fill();
+    });
+    label(ctx,w,h,'Miami',c[1]);
+  },
+  toronto:(ctx,w,h,c)=>{
+    ctx.fillStyle=c[0];ctx.fillRect(0,0,w,h);
+    for(let i=0;i<60;i++){ctx.fillStyle='rgba(255,255,255,'+(Math.random()*.6+.1)+')';ctx.fillRect(Math.random()*w,Math.random()*h*.55,1.5,1.5);}
+    ctx.fillStyle='#0A0A1A';ctx.fillRect(0,h*.7,w,h*.3);
+    // CN Tower
+    ctx.fillStyle='#555';ctx.fillRect(.47*w,h*.05,8,h*.55);
+    ctx.fillStyle='#777';ctx.beginPath();ctx.ellipse(.474*w,h*.18,20,8,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#C8341A';ctx.fillRect(.477*w,h*.04,3,h*.06);
+    const blds=[[.05,.3,.08,.5],[.13,.22,.07,.5],[.2,.28,.1,.5],[.3,.35,.07,.5],[.56,.2,.08,.5],[.64,.28,.09,.5],[.73,.22,.07,.5],[.80,.3,.09,.5],[.89,.25,.08,.5]];
+    blds.forEach(([x,y,bw,bh])=>{
+      ctx.fillStyle=`hsl(220,20%,${Math.floor(13+Math.random()*15)}%)`;
+      ctx.fillRect(x*w,y*h,bw*w,(bh-y)*h);
+    });
+    label(ctx,w,h,'Toronto',c[1]);
+  },
+  dallas:(ctx,w,h,c)=>{
+    ctx.fillStyle=c[0];ctx.fillRect(0,0,w,h);
+    for(let i=0;i<50;i++){ctx.fillStyle='rgba(255,255,200,'+(Math.random()*.5+.15)+')';ctx.fillRect(Math.random()*w,Math.random()*h*.5,1.5,1.5);}
+    ctx.fillStyle='#0A0500';ctx.fillRect(0,h*.75,w,h*.25);
+    const blds=[[.05,.2,.09,.5],[.14,.3,.06,.5],[.2,.15,.07,.5],[.27,.25,.1,.5],[.37,.18,.07,.5],[.44,.28,.06,.5],[.5,.12,.1,.5],[.6,.22,.08,.5],[.68,.3,.09,.5],[.77,.2,.07,.5],[.84,.28,.09,.5]];
+    blds.forEach(([x,y,bw,bh])=>{
+      ctx.fillStyle=`hsl(20,20%,${Math.floor(12+Math.random()*16)}%)`;
+      ctx.fillRect(x*w,y*h,bw*w,(bh-y)*h);
+    });
+    label(ctx,w,h,'Dallas',c[1]);
+  },
+  london:(ctx,w,h,c)=>{
+    ctx.fillStyle=c[0];ctx.fillRect(0,0,w,h);
+    for(let i=0;i<30;i++){ctx.fillStyle='rgba(255,255,255,'+(Math.random()*.3+.05)+')';ctx.fillRect(Math.random()*w,Math.random()*h*.5,1.5,1.5);}
+    ctx.fillStyle='#0A0818';ctx.fillRect(0,h*.65,w,h*.35);
+    // Big Ben
+    ctx.fillStyle='#2A2A4A';ctx.fillRect(.25*w,h*.25,22,h*.45);
+    ctx.fillStyle='#3A3A5A';ctx.fillRect(.23*w,h*.22,26,h*.06);
+    ctx.fillStyle='rgba(255,220,100,.7)';ctx.beginPath();ctx.arc(.261*w,h*.25,10,0,Math.PI*2);ctx.fill();
+    // London Eye
+    ctx.strokeStyle='rgba(100,120,200,.6)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(.65*w,h*.5,45,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='rgba(100,120,200,.15)';ctx.fill();
+    for(let a=0;a<Math.PI*2;a+=Math.PI/6){ctx.strokeStyle='rgba(100,120,200,.4)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(.65*w,h*.5);ctx.lineTo(.65*w+Math.cos(a)*45,h*.5+Math.sin(a)*45);ctx.stroke();}
+    const blds=[[.05,.45,.08,.65],[.13,.5,.07,.65],[.35,.4,.08,.65],[.43,.45,.07,.65],[.75,.42,.08,.65],[.83,.47,.08,.65]];
+    blds.forEach(([x,y,bw,bh])=>{ctx.fillStyle=`hsl(230,25%,${Math.floor(10+Math.random()*12)}%)`;ctx.fillRect(x*w,y*h,bw*w,(bh-y)*h);});
+    label(ctx,w,h,'London',c[1]);
+  },
+};
+
+function label(ctx,w,h,text,color){
+  ctx.font=`bold ${Math.floor(w*.045)}px 'Bebas Neue',Impact,sans-serif`;
+  ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillText(text,w*.04+2,h*.92+2);
+  ctx.fillStyle=color||'#fff';ctx.fillText(text,w*.04,h*.92);
+}
+
+function getCityData(city){
+  const uc=city.toUpperCase();
+  for(const[k,v]of Object.entries(CITY_DATA))if(uc.includes(k))return v;
+  return CITY_DATA['LONDON'];
+}
+
+function drawPostcard(city){
+  const canvas=document.getElementById('postcard-canvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const w=canvas.offsetWidth||window.innerWidth;
+  const h=200;
+  canvas.width=w*dpr;canvas.height=h*dpr;
+  canvas.style.width=w+'px';canvas.style.height=h+'px';
+  ctx.scale(dpr,dpr);
+  const cd=getCityData(city);
+  const key=cd.skyline;
+  if(SKYLINES[key])SKYLINES[key](ctx,w,h,cd.colors);
+  else{ctx.fillStyle=cd.colors[0];ctx.fillRect(0,0,w,h);label(ctx,w,h,city,cd.colors[1]);}
+}
+
+// ── CONFETTI ──────────────────────────────────────────────────────────────────
+function launchConfetti(){
+  const colors=['#C8102E','#012169','#FFFFFF','#FFD700','#FF6B6B'];
+  const shapes=['🏴󠁧󠁢󠁥󠁮󠁧󠁿','⚽','🏆','★'];
+  for(let i=0;i<60;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.className='confetti-piece';
+      el.style.left=Math.random()*100+'vw';
+      el.style.animationDuration=(Math.random()*2+2)+'s';
+      el.style.animationDelay=Math.random()*1+'s';
+      if(Math.random()>.5){
+        el.style.background=colors[Math.floor(Math.random()*colors.length)];
+        el.style.borderRadius=Math.random()>.5?'50%':'2px';
+      }else{
+        el.textContent=shapes[Math.floor(Math.random()*shapes.length)];
+        el.style.background='transparent';el.style.fontSize='16px';
+      }
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(),4000);
+    },i*40);
+  }
+}
+
+// ── LOCAL TIME ────────────────────────────────────────────────────────────────
+function startLocalTime(city){
+  const cd=getCityData(city);
+  const cityName=niceCity(city).split('→')[0].trim();
+  document.getElementById('local-time-city').textContent=cityName;
+  function tick(){
+    try{
+      const now=new Date();
+      const t=now.toLocaleTimeString('en-GB',{timeZone:cd.tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+      const tz=now.toLocaleDateString('en-GB',{timeZone:cd.tz,timeZoneName:'short'}).split(', ')[1]||cd.tz;
+      document.getElementById('local-time-value').textContent=t;
+      document.getElementById('local-time-tz').textContent=tz;
+    }catch(e){}
+  }
+  tick();setInterval(tick,1000);
+}
+
+// ── MILES TRACKER ─────────────────────────────────────────────────────────────
+const ROUTE_LEGS_1ST=[
+  {from:'London',to:'Boston',miles:3256},
+  {from:'Boston',to:'New York',miles:215},
+  {from:'New York',to:'Atlanta',miles:865},
+  {from:'Atlanta',to:'Mexico City',miles:1299},
+  {from:'Mexico City',to:'Miami',miles:1304},
+  {from:'Miami',to:'London',miles:4415},
+];
+const ROUTE_LEGS_2ND=[
+  {from:'London',to:'Boston',miles:3256},
+  {from:'Boston',to:'New York',miles:215},
+  {from:'New York',to:'Toronto',miles:550},
+  {from:'Toronto',to:'Dallas',miles:1560},
+  {from:'Dallas',to:'London',miles:4754},
+];
+const CITY_ORDER_1ST=['LONDON','BOSTON','NYC','ATLANTA','MEXICO CITY','MIAMI'];
+const CITY_ORDER_2ND=['LONDON','BOSTON','NYC','TORONTO','DALLAS'];
+
+function calcMiles(days){
+  const today=new Date().toISOString().slice(0,10);
+  const legs=currentRoute==='1st'?ROUTE_LEGS_1ST:ROUTE_LEGS_2ND;
+  const order=currentRoute==='1st'?CITY_ORDER_1ST:CITY_ORDER_2ND;
+  let milesTotal=0,totalTrip=0;
+  legs.forEach(l=>totalTrip+=l.miles);
+  let citiesVisited=0;
+  for(const d of days){
+    if(d.date>today)break;
+    const key=d.city.toUpperCase().split('→')[0].trim();
+    const idx=order.findIndex(c=>key.includes(c)||c.includes(key));
+    if(idx>citiesVisited)citiesVisited=idx;
+  }
+  for(let i=0;i<Math.min(citiesVisited,legs.length);i++)milesTotal+=legs[i].miles;
+  return{miles:milesTotal,total:totalTrip};
+}
+
+function updateMiles(days){
+  const{miles,total}=calcMiles(days);
+  const pct=Math.round(miles/total*100);
+  document.getElementById('miles-value').textContent=miles.toLocaleString()+' mi';
+  document.getElementById('miles-sub').textContent=`of ~${total.toLocaleString()} total miles · ${pct}% of the journey`;
+  setTimeout(()=>{document.getElementById('miles-bar').style.width=pct+'%';},300);
+}
+
+// ── WEATHER FORECAST ──────────────────────────────────────────────────────────
+const CITY_COORDS={
+  'BOSTON':[42.36,-71.06],'NEW YORK':[40.71,-74.01],'NYC':[40.71,-74.01],
+  'ATLANTA':[33.75,-84.39],'MEXICO':[19.43,-99.13],'MIAMI':[25.77,-80.19],
+  'TORONTO':[43.65,-79.38],'DALLAS':[32.78,-96.80],'LONDON':[51.51,-0.13],
+};
+function getCoords(city){const uc=city.toUpperCase();for(const[k,v]of Object.entries(CITY_COORDS))if(uc.includes(k))return v;return null;}
+function wEmoji(c){return c===0?'☀️':c<=2?'⛅':c<=3?'☁️':c<=49?'🌫️':c<=67?'🌧️':c<=82?'🌦️':'⛈️';}
+function wDesc(c){return c===0?'Sunny':c<=2?'Partly cloudy':c<=3?'Overcast':c<=49?'Foggy':c<=67?'Rainy':c<=82?'Showers':'Stormy';}
+
+async function fetchForecast(city){
+  const coords=getCoords(city);
+  if(!coords)return;
+  try{
+    const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords[0]}&longitude=${coords[1]}&daily=temperature_2m_max,temperature_2m_min,weathercode&temperature_unit=celsius&timezone=auto&forecast_days=3`);
+    const data=await res.json();
+    const wrap=document.getElementById('forecast-wrap');
+    const grid=document.getElementById('forecast-grid');
+    const days=data.daily;
+    const labels=['Today','Tomorrow','Day after'];
+    grid.innerHTML=days.weathercode.map((code,i)=>`
+      <div class="forecast-card">
+        <div class="forecast-day">${labels[i]}</div>
+        <span class="forecast-emoji">${wEmoji(code)}</span>
+        <div class="forecast-temp">${Math.round(days.temperature_2m_max[i])}° / ${Math.round(days.temperature_2m_min[i])}°</div>
+        <div class="forecast-desc">${wDesc(code)}</div>
+      </div>`).join('');
+    wrap.style.display='block';
+  }catch(e){}
+}
+
+// ── MATCH HISTORY ─────────────────────────────────────────────────────────────
+// Results hardcoded here — update after each match
+const RESULTS=[
+  {date:'2026-06-23',match:'England vs Ghana',venue:'Gillette Stadium, Boston',score:null},
+  {date:'2026-06-27',match:'England vs Panama',venue:'MetLife Stadium, New York',score:null},
+  {date:'2026-07-01',match:'England — Round of 32',venue:'Mercedes-Benz Stadium, Atlanta',score:null},
+  {date:'2026-07-05',match:'England — Round of 16',venue:'Estadio Azteca, Mexico City',score:null},
+  {date:'2026-07-11',match:'England — Quarter-Final',venue:'Hard Rock Stadium, Miami',score:null},
+];
+const RESULTS_2ND=[
+  {date:'2026-06-23',match:'England vs Ghana',venue:'Gillette Stadium, Boston',score:null},
+  {date:'2026-06-27',match:'England vs Panama',venue:'MetLife Stadium, New York',score:null},
+  {date:'2026-07-02',match:'England — Round of 32',venue:'BMO Field, Toronto',score:null},
+  {date:'2026-07-06',match:'England — Round of 16',venue:'AT&T Stadium, Dallas',score:null},
+];
+
+function buildHistory(){
+  const today=new Date().toISOString().slice(0,10);
+  const matches=currentRoute==='1st'?RESULTS:RESULTS_2ND;
+  const wrap=document.getElementById('history-inner');
+  const played=matches.filter(m=>m.date<=today);
+  const upcoming=matches.filter(m=>m.date>today);
+  if(!played.length){
+    wrap.innerHTML=`<div class="history-pending">No matches played yet — first game is 23 June in Boston 🏴󠁧󠁢󠁥󠁮󠁧󠁿</div>`;
+    return;
+  }
+  let html=played.map(m=>{
+    const flag=m.score?'🏴󠁧󠁢󠁥󠁮󠁧󠁿':'⏳';
+    const scoreHtml=m.score
+      ?`<div><div class="history-score">${m.score.eng}–${m.score.opp}</div><div class="history-result ${m.score.eng>m.score.opp?'hr-win':m.score.eng===m.score.opp?'hr-draw':'hr-loss'}">${m.score.eng>m.score.opp?'WIN':m.score.eng===m.score.opp?'DRAW':'LOSS'}</div></div>`
+      :`<div style="font-size:12px;color:var(--text-muted);padding:4px">TBC</div>`;
+    return`<div class="history-card"><div class="history-flag">${flag}</div><div class="history-info"><div class="history-match">${m.match}</div><div class="history-meta">${new Date(m.date+'T12:00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'short'})} · ${m.venue.split(',')[0]}</div></div>${scoreHtml}</div>`;
+  }).join('');
+  if(upcoming.length){
+    html+=`<div style="font-size:11px;color:var(--text-muted);padding:8px 0 6px;font-weight:600;letter-spacing:.06em;text-transform:uppercase">Upcoming</div>`;
+    html+=upcoming.map(m=>`<div class="history-card" style="opacity:.5"><div class="history-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</div><div class="history-info"><div class="history-match">${m.match}</div><div class="history-meta">${new Date(m.date+'T12:00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'short'})} · ${m.venue.split(',')[0]}</div></div><div style="font-size:11px;color:var(--text-muted)">Not yet played</div></div>`).join('');
+  }
+  wrap.innerHTML=html;
+}
+
+// ── SHEETS ────────────────────────────────────────────────────────────────────
+async function fetchSheet(range){
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?key=${SHEETS_KEY}`;
+  const r=await fetch(url);if(!r.ok)throw new Error(`Sheets API ${r.status}`);
+  const d=await r.json();return d.values||[];
+}
+async function loadSheetData(){
+  [itinRows,flightRows]=await Promise.all([fetchSheet('🗓️ Itinerary!A:I'),fetchSheet('✈️ Flights!A:N')]);
+}
+
+// ── PARSE ITINERARY ───────────────────────────────────────────────────────────
+function parseItinerary(){
+  const days=[];let inAlt=false,hdrSeen=false;
+  const ENGLAND_DATES=new Set(['2026-06-23','2026-06-27','2026-07-01','2026-07-02','2026-07-05','2026-07-06','2026-07-11']);
+  for(const row of itinRows){
+    if(!row||!row.length)continue;
+    const c0=(row[0]||'').trim();
+    if(c0.includes('ALTERNATIVE')||c0.includes('2ND IN GROUP')){inAlt=true;hdrSeen=false;continue;}
+    if(c0==='Date'&&(row[1]||'').trim()==='Day'){hdrSeen=true;continue;}
+    if(!hdrSeen||!c0||c0==='Date')continue;
+    const dm=c0.match(/\d{4}-\d{2}-\d{2}/);if(!dm)continue;
+    const date=dm[0],city=(row[2]||'').trim(),am=(row[3]||'').trim(),pm=(row[4]||'').trim(),eve=(row[5]||'').trim(),ko=(row[6]||'').trim(),match=(row[7]||'').trim(),venue=(row[8]||'').trim();
+    if(!city||city==='LEGEND & NOTES')continue;
+    const isMatch=ENGLAND_DATES.has(date);
+    const isFlight=!!(city.includes('→')||am.toLowerCase().includes('flight')||pm.toLowerCase().includes('flight'));
+    const isSpecial=!!(am.toLowerCase().includes('tour')||am.toLowerCase().includes('pyramid')||am.toLowerCase().includes('lucha'));
+    let summary='';
+    if(isMatch)summary=`⚽ Match day — ${match||'England'}`;
+    else if(isFlight)summary=getFlightSummary(date,city);
+    else summary=[am,pm,eve].filter(Boolean).join(' · ').substring(0,90)||city;
+    let detail=[am,pm,eve].filter(Boolean).join('. ');
+    if(isMatch&&ko)detail+=` Kick-off: ${ko}.`;
+    if(isMatch&&venue)detail+=` Venue: ${venue}.`;
+    days.push({date,city,am,pm,eve,ko,match,venue,isMatch,isFlight,isSpecial,summary,detail,route:inAlt?'2nd':'1st'});
+  }
+  return days;
+}
+
+function getFlightSummary(date,city){
+  for(const r of flightRows){
+    if(!r||r.length<5)continue;
+    const rd=(r[0]||'').trim();
+    if(!rd.includes(date.slice(5,7))&&!rd.includes(date.slice(8,10)))continue;
+    const fr=(r[2]||'').trim(),to=(r[3]||'').trim(),al=(r[4]||'').trim(),ti=(r[5]||'').trim();
+    if(fr&&to)return`✈ ${fr} → ${to}${al?' · '+al:''}${ti?' · '+ti:''}`;
+  }
+  return`✈ Flying — ${city}`;
+}
+
+// ── ROUTE DETECTION ───────────────────────────────────────────────────────────
+async function detectRoute(){
+  try{
+    const now=new Date();
+    if(now<=new Date('2026-06-27T23:00:00-05:00'))return;
+    const r=await fetch(`https://api.football-data.org/v4/competitions/2000/standings`,{headers:{'X-Auth-Token':FB_KEY}});
+    if(!r.ok)return;
+    const d=await r.json();
+    for(const g of(d.standings||[])){
+      const eng=(g.table||[]).find(e=>(e.team?.name||'').toLowerCase().includes('england'));
+      if(eng){currentRoute=eng.position<=1?'1st':'2nd';break;}
+    }
+  }catch(e){}
+}
+
+function updateRouteBadge(){
+  const b=document.getElementById('route-badge');
+  const now=new Date();
+  if(now<=new Date('2026-06-27T23:00:00-05:00')){b.textContent='Route TBC · 27 Jun';b.className='route-badge';}
+  else if(currentRoute==='1st'){b.textContent='1st place route';b.className='route-badge route-1st';}
+  else{b.textContent='2nd place route';b.className='route-badge route-2nd';}
+}
+
+// ── MATCHDAY TAKEOVER ─────────────────────────────────────────────────────────
+const MATCH_UTC={'2026-06-23':'2026-06-23T20:00:00Z','2026-06-27':'2026-06-27T21:00:00Z','2026-07-01':'2026-07-01T16:00:00Z','2026-07-02':'2026-07-02T22:00:00Z','2026-07-05':'2026-07-06T01:00:00Z','2026-07-06':'2026-07-06T20:00:00Z','2026-07-11':'2026-07-12T01:00:00Z'};
+
+function showMatchdayTakeover(day){
+  const el=document.getElementById('matchday-takeover');
+  if(!day||!day.isMatch){el.classList.remove('visible');return;}
+  el.classList.add('visible');
+  document.getElementById('takeover-sub').textContent=day.match+(day.venue?' · '+day.venue.split(',')[0]:'');
+  document.getElementById('takeover-ko').textContent=day.ko?'Kick-off: '+day.ko:'';
+  launchConfetti();
+}
+
+// ── COUNTDOWN ─────────────────────────────────────────────────────────────────
+function startCountdown(days){
+  const strip=document.getElementById('countdown-strip'),timerEl=document.getElementById('countdown-timer'),matchEl=document.getElementById('countdown-match');
+  function tick(){
+    const now=new Date();
+    const nxt=days.filter(d=>d.isMatch&&MATCH_UTC[d.date]&&new Date(MATCH_UTC[d.date])>now)[0];
+    if(!nxt){strip.classList.remove('visible');return;}
+    const diff=new Date(MATCH_UTC[nxt.date])-now;
+    strip.classList.add('visible');
+    matchEl.textContent=nxt.match+(nxt.venue?' · '+nxt.venue.split(',')[0]:'');
+    const dd=Math.floor(diff/86400000),hh=Math.floor((diff%86400000)/3600000),mm=Math.floor((diff%3600000)/60000),ss=Math.floor((diff%60000)/1000);
+    timerEl.textContent=dd>0?`${dd}d ${String(hh).padStart(2,'0')}h ${String(mm).padStart(2,'0')}m`:`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+  }
+  tick();setInterval(tick,1000);
+}
+
+// ── HERO ──────────────────────────────────────────────────────────────────────
+function flagForCity(city){const uc=city.toUpperCase();if(uc.includes('TORONTO'))return'🇨🇦';if(uc.includes('LONDON'))return'🇬🇧';if(uc.includes('MEXICO'))return'🇲🇽';return'🇺🇸';}
+function niceCity(city){return city.replace(/\bBOSTON\b/gi,'Boston').replace(/\bNYC\b/gi,'New York City').replace(/\bNEW YORK CITY\b/gi,'New York City').replace(/\bNEW YORK\b/gi,'New York City').replace(/\bATLANTA\b/gi,'Atlanta').replace(/\bMEXICO CITY\b/gi,'Mexico City').replace(/\bMIAMI\b/gi,'Miami').replace(/\bTORONTO\b/gi,'Toronto').replace(/\bDALLAS\b/gi,'Dallas').replace(/\bLONDON\b/gi,'London');}
+
+async function buildHero(day){
+  if(!day){
+    document.getElementById('hero-city').textContent='🏠 London';
+    document.getElementById('hero-date').textContent='';
+    drawPostcard('LONDON');startLocalTime('LONDON');
+    const now=new Date();
+    document.getElementById('hero-cards').innerHTML=`<div class="hero-card full"><div class="hero-card-label">Status</div><div class="hero-card-value">${now<new Date('2026-06-22')?'Not yet departed — trip begins 22 June 2026':'Trip complete — Dom is home!'}</div></div>`;
+    return;
+  }
+  const nc=niceCity(day.city);
+  document.getElementById('hero-city').textContent=flagForCity(day.city)+' '+nc;
+  const d=new Date(day.date+'T12:00:00Z');
+  document.getElementById('hero-date').textContent=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  drawPostcard(day.city);
+  startLocalTime(day.city);
+  fetchForecast(day.city);
+
+  // Current weather for hero card
+  const coords=getCoords(day.city);
+  let weatherHtml='';
+  if(coords){
+    try{
+      const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords[0]}&longitude=${coords[1]}&current=temperature_2m,weathercode&temperature_unit=celsius&timezone=auto`);
+      const wd=await res.json();
+      const temp=Math.round(wd.current.temperature_2m),code=wd.current.weathercode;
+      weatherHtml=`<div class="hero-card"><div class="hero-card-label">Right now</div><div class="hero-card-value weather-val">${wEmoji(code)} ${temp}°C</div><div class="hero-card-sub">${wDesc(code)}</div></div>`;
+    }catch(e){}
+  }
+  let html=`<div class="hero-card full"><div class="hero-card-label">Today</div><div class="hero-card-value">${day.detail||day.summary}</div></div>`;
+  html+=weatherHtml;
+  if(day.isMatch)html+=`<div class="hero-card"><div class="hero-card-label">Match</div><div class="hero-card-value match-val">⚽ ${day.match}</div><div class="hero-card-sub">KO ${day.ko}</div></div>`;
+  if(day.isFlight)html+=`<div class="hero-card full"><div class="hero-card-label">Flight</div><div class="hero-card-value flight-val">${day.summary}</div></div>`;
+  document.getElementById('hero-cards').innerHTML=html;
+}
+
+// ── TIMELINE ──────────────────────────────────────────────────────────────────
+function buildTimeline(days){
+  const wrap=document.getElementById('timeline-inner');
+  const today=new Date().toISOString().slice(0,10);
+  if(!days.length){wrap.innerHTML=`<div class="loading-wrap"><div class="loading-text">No itinerary data.</div></div>`;return;}
+  let html='<div class="timeline-wrap">';
+  days.forEach((d,i)=>{
+    const isToday=d.date===today;
+    const dt=new Date(d.date+'T12:00:00Z');
+    const dl=dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).replace(',','<br>');
+    const nc=niceCity(d.city);
+    const dotC='tl-dot'+(isToday?' is-today':d.isMatch?' is-match':d.isFlight?' is-flight':'');
+    const cardC='tl-card'+(isToday?' is-today':'')+(d.isMatch?' is-match':'');
+    let badges='';
+    if(isToday)badges+=`<span class="tl-badge badge-today">Today</span>`;
+    if(d.isMatch)badges+=`<span class="tl-badge badge-match">⚽ Match</span>`;
+    else if(d.isFlight)badges+=`<span class="tl-badge badge-flight">✈ Flight</span>`;
+    if(d.isSpecial&&!d.isMatch)badges+=`<span class="tl-badge badge-special">★</span>`;
+    // Check results
+    const result=RESULTS.find(r=>r.date===d.date&&r.score);
+    const resultHtml=result?`<div class="match-result ${result.score.eng>result.score.opp?'result-win':result.score.eng===result.score.opp?'result-draw':'result-loss'}">🏴󠁧󠁢󠁥󠁮󠁧󠁿 ${result.score.eng} – ${result.score.opp} · ${result.score.eng>result.score.opp?'WIN ✅':result.score.eng===result.score.opp?'DRAW':'LOSS'}</div>`:'';
+    let pills=d.isMatch?`<span class="detail-pill pill-match">⚽ ${d.match}${d.venue?' · '+d.venue.split(',')[0]:''}${d.ko?' · KO '+d.ko:''}</span>`:'';
+    html+=`<div class="tl-item"><div class="tl-left"><div class="tl-date">${dl}</div><div class="${dotC}"></div><div class="tl-line"></div></div><div><div class="${cardC}" onclick="toggle('det-${i}')"><div class="tl-card-head"><div><div class="tl-city">${flagForCity(d.city)} ${nc}</div><div class="tl-summary">${d.summary}</div></div><div class="tl-badges">${badges}</div></div><div class="tl-detail${isToday?' open':''}" id="det-${i}">${d.detail||d.summary}${pills?'<br>'+pills:''}${resultHtml}</div></div></div></div>`;
+  });
+  html+='</div>';
+  wrap.innerHTML=html;
+  const ti=days.findIndex(d=>d.date===today);
+  if(ti>=0)setTimeout(()=>{wrap.querySelectorAll('.tl-card')[ti]?.scrollIntoView({behavior:'smooth',block:'center'});},400);
+}
+
+function toggle(id){document.getElementById(id)?.classList.toggle('open');}
+
+// ── MAP (Leaflet + animated route) ────────────────────────────────────────────
+let leafletMap=null;
+function buildMap(days){
+  const today=new Date().toISOString().slice(0,10);
+  const visited=new Set();let currentCity='';
+  for(const d of days){
+    const key=d.city.toUpperCase().split('→')[0].trim();
+    if(d.date<today)visited.add(key);
+    if(d.date===today)currentCity=key;
+  }
+  const cities1=[
+    {key:'BOSTON',label:'Boston',lat:42.36,lng:-71.06,match:'England vs Ghana · 23 Jun'},
+    {key:'NYC',label:'New York',lat:40.71,lng:-74.01,match:'England vs Panama · 27 Jun'},
+    {key:'ATLANTA',label:'Atlanta',lat:33.75,lng:-84.39,match:'England R32 · 1 Jul'},
+    {key:'MEXICO CITY',label:'Mexico City',lat:19.43,lng:-99.13,match:'England R16 · 5 Jul'},
+    {key:'MIAMI',label:'Miami',lat:25.77,lng:-80.19,match:'England QF · 11 Jul'},
+  ];
+  const cities2=[
+    {key:'BOSTON',label:'Boston',lat:42.36,lng:-71.06,match:'England vs Ghana · 23 Jun'},
+    {key:'NYC',label:'New York',lat:40.71,lng:-74.01,match:'England vs Panama · 27 Jun'},
+    {key:'TORONTO',label:'Toronto',lat:43.65,lng:-79.38,match:'England R32 · 2 Jul'},
+    {key:'DALLAS',label:'Dallas',lat:32.78,lng:-96.80,match:'England R16 · 6 Jul'},
+  ];
+  const london={key:'LONDON',label:'London (home)',lat:51.51,lng:-0.13,match:''};
+  const cities=currentRoute==='1st'?cities1:cities2;
+  const allCities=[london,...cities];
+  if(leafletMap){leafletMap.remove();leafletMap=null;}
+  const map=L.map('leaflet-map',{zoomControl:true,scrollWheelZoom:false});
+  leafletMap=map;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>',maxZoom:13}).addTo(map);
+  map.fitBounds(L.latLngBounds(allCities.map(c=>[c.lat,c.lng])),{padding:[30,30]});
+
+  // Animated route — draw leg by leg with delay
+  const coords=allCities.map(c=>[c.lat,c.lng]);
+  let drawn=[];
+  let polyline=L.polyline([],{color:'#C8102E',weight:2.5,opacity:0,dashArray:'8,5'}).addTo(map);
+  function animateLeg(idx){
+    if(idx>=coords.length)return;
+    drawn.push(coords[idx]);
+    polyline.setLatLngs(drawn);
+    polyline.setStyle({opacity:.6});
+    setTimeout(()=>animateLeg(idx+1),idx===0?300:600);
+  }
+  setTimeout(()=>animateLeg(0),400);
+
+  // City markers
+  for(const c of allCities){
+    const isCurr=currentCity&&(currentCity.includes(c.key)||c.key.includes(currentCity));
+    const isVis=visited.has(c.key)||[...visited].some(v=>v.includes(c.key)||c.key.includes(v));
+    const isLondon=c.key==='LONDON';
+    const color=isCurr?'#C8102E':isLondon||isVis?'#012169':'#8892B0';
+    const radius=isCurr?10:isLondon?7:8;
+    L.circleMarker([c.lat,c.lng],{radius,color:'#fff',weight:2,fillColor:color,fillOpacity:1}).addTo(map)
+      .bindPopup('<div style="font-family:Inter,system-ui;min-width:120px"><strong style="color:#012169;font-size:13px">'+c.label+'</strong>'+(isCurr?'<br><span style="color:#C8102E;font-size:11px;font-weight:600">📍 Dom is here now</span>':'')+(c.match?'<br><span style="color:#555;font-size:11px">⚽ '+c.match+'</span>':'')+'</div>',{closeButton:false,offset:[0,-4]})
+      .on('mouseover',function(){this.openPopup();});
+    L.marker([c.lat,c.lng],{icon:L.divIcon({className:'',html:'<div style="background:'+color+';color:#fff;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,0.2);margin-left:14px;margin-top:-8px;font-family:Inter,system-ui">'+c.label+'</div>',iconAnchor:[0,0]}),interactive:false}).addTo(map);
+  }
+}
+
+// ── ROUTE PANEL ───────────────────────────────────────────────────────────────
+function buildRoutePanel(){
+  const panel=document.getElementById('route-panel');
+  const r1=[{icon:'✈️',city:'London',dates:'Mon 22 Jun',match:''},{icon:'🇺🇸',city:'Boston',dates:'22–25 Jun',match:'England vs Ghana · 23 Jun · 4:00pm ET'},{icon:'🇺🇸',city:'New York City',dates:'25–29 Jun',match:'England vs Panama · 27 Jun · 5:00pm ET'},{icon:'🇺🇸',city:'Atlanta',dates:'29 Jun – 2 Jul',match:'England R32 · 1 Jul · 12:00pm ET'},{icon:'🇲🇽',city:'Mexico City',dates:'2–6 Jul',match:'England R16 at Azteca · 5 Jul · 7:00pm CT'},{icon:'🇺🇸',city:'Miami',dates:'6–12 Jul',match:'England QF · 11 Jul · 9:00pm ET'},{icon:'✈️',city:'Home to London',dates:'12 Jul',match:''}];
+  const r2=[{icon:'✈️',city:'London',dates:'Mon 22 Jun',match:''},{icon:'🇺🇸',city:'Boston',dates:'22–25 Jun',match:'England vs Ghana · 23 Jun · 4:00pm ET'},{icon:'🇺🇸',city:'New York City',dates:'25–29 Jun',match:'England vs Panama · 27 Jun · 5:00pm ET'},{icon:'🇨🇦',city:'Toronto',dates:'29 Jun – 3 Jul',match:'England R32 at BMO Field · 2 Jul · 6:00pm ET'},{icon:'🇺🇸',city:'Dallas',dates:'3–6 Jul',match:'England R16 at AT&T Stadium · 6 Jul · 3:00pm CT'},{icon:'✈️',city:'Home to London',dates:'6 Jul',match:''}];
+  const sh=s=>`<div class="route-stops">${s.map(x=>`<div class="route-stop"><div class="rs-icon">${x.icon}</div><div><div class="rs-city">${x.city}</div><div class="rs-dates">${x.dates}</div>${x.match?`<div class="rs-match">⚽ ${x.match}</div>`:''}</div></div>`).join('')}</div>`;
+  panel.innerHTML=`<div class="route-section"><div class="route-heading">If England finish 1st <span class="rt-badge rt-1st">Atlanta route</span></div><div class="route-sub">England top Group L on 27 June</div>${sh(r1)}</div><div class="route-section"><div class="route-heading">If England finish 2nd <span class="rt-badge rt-2nd">Toronto route</span></div><div class="route-sub">England runner-up on 27 June</div>${sh(r2)}</div><div class="route-note">The route is confirmed after England vs Panama on 27 June. This tracker switches automatically.</div>`;
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function showTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='map'&&leafletMap)setTimeout(()=>leafletMap.invalidateSize(),100);
+}
+
+function getTodayEntry(days){
+  const today=new Date().toISOString().slice(0,10);
+  if(today<'2026-06-22'||today>'2026-07-12')return null;
+  return days.find(d=>d.date===today)||null;
+}
+
+// ── OFFLINE (Service Worker) ──────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  const swCode=`
+const CACHE='dom-wc26-v1';
+const SHELL=['./'];
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL))));
+self.addEventListener('fetch',e=>{
+  if(e.request.url.includes('sheets.googleapis')||e.request.url.includes('football-data')||e.request.url.includes('open-meteo')){
+    e.respondWith(fetch(e.request).catch(()=>new Response('{}',{headers:{'Content-Type':'application/json'}})));
+    return;
+  }
+  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+    const clone=res.clone();
+    caches.open(CACHE).then(c=>c.put(e.request,clone));
+    return res;
+  })));
+});`;
+  const blob=new Blob([swCode],{type:'application/javascript'});
+  const url=URL.createObjectURL(blob);
+  navigator.serviceWorker.register(url).catch(()=>{});
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init(){
+  document.getElementById('timeline-inner').innerHTML=`<div class="loading-wrap"><div class="loading-spinner"></div><div class="loading-text">Loading itinerary from sheet…</div></div>`;
+  try{await Promise.all([loadSheetData(),detectRoute()]);}
+  catch(e){
+    document.getElementById('timeline-inner').innerHTML=`<div class="error-wrap"><div class="error-card">Couldn't load the sheet. Make sure it is set to "Anyone with the link can view".<br><br>Error: ${e.message}</div></div>`;
+    return;
+  }
+  updateRouteBadge();
+  const allDays=parseItinerary();
+  const days=allDays.filter(d=>d.route===currentRoute);
+  const show=days.length?days:allDays.filter(d=>d.route==='1st');
+  const todayEntry=getTodayEntry(show);
+  showMatchdayTakeover(todayEntry);
+  await buildHero(todayEntry);
+  updateMiles(show);
+  buildTimeline(show);
+  buildHistory();
+  buildRoutePanel();
+  startCountdown(show);
+}
+
+init();
+</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onload="if(window._mapPending){buildMap(window._mapPending);window._mapPending=null;}"></script>
+</body>
+</html>
