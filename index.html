@@ -155,6 +155,8 @@ body{min-height:100vh;overflow-x:hidden}
 .map-legend{display:flex;gap:12px}
 .map-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted)}
 .legend-dot{width:8px;height:8px;border-radius:50%}
+@keyframes liveDot{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes planeRing{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.4);opacity:.35}}
 
 /* WEATHER FORECAST */
 .forecast-wrap{padding:0 20px 16px}
@@ -1506,6 +1508,71 @@ function setTimelineRoute(route){
 
 function toggle(id){document.getElementById(id)?.classList.toggle('open');}
 
+// ── LIVE FLIGHT POSITION ──────────────────────────────────────────────────────
+// Hardcoded schedule with UTC departure times (converted from local times in the sheet).
+// BST=UTC+1, EDT=UTC-4, CT=UTC-5. Duration in minutes from verified schedule times.
+const FLIGHT_SCHEDULE=[
+  // ── BOTH ROUTES ──
+  // BA1545 LHR 10:05 BST = 09:05 UTC; BOS arr 12:35 EDT = 16:35 UTC; dur=450min
+  {date:'2026-06-22',depH:9,depM:5,durationMins:450,miles:3256,fromCode:'LHR',toCode:'BOS',fromLabel:'London',toLabel:'Boston',fromCoords:[51.47,-0.4543],toCoords:[42.3656,-71.0096],flightNo:'BA 1545',route:'both'},
+  // DL5720 BOS 09:05 EDT = 13:05 UTC; JFK arr 10:24 EDT = 14:24 UTC; dur=79min
+  {date:'2026-06-25',depH:13,depM:5,durationMins:79,miles:215,fromCode:'BOS',toCode:'JFK',fromLabel:'Boston',toLabel:'New York',fromCoords:[42.3656,-71.0096],toCoords:[40.6413,-73.7781],flightNo:'DL5720',route:'both'},
+  // ── ROUTE 1 ──
+  // DL0962 JFK 19:00 EDT = 23:00 UTC; ATL arr 22:00 EDT = 02:00+1 UTC; dur=180min
+  {date:'2026-06-29',depH:23,depM:0,durationMins:180,miles:865,fromCode:'JFK',toCode:'ATL',fromLabel:'New York',toLabel:'Atlanta',fromCoords:[40.6413,-73.7781],toCoords:[33.6407,-84.4277],flightNo:'DL0962',route:'1st'},
+  // DL0577 ATL 08:22 EDT = 12:22 UTC; MEX arr 09:55 CDT = 14:55 UTC; dur=153min
+  {date:'2026-07-02',depH:12,depM:22,durationMins:153,miles:1299,fromCode:'ATL',toCode:'MEX',fromLabel:'Atlanta',toLabel:'Mexico City',fromCoords:[33.6407,-84.4277],toCoords:[19.4363,-99.0721],flightNo:'DL0577',route:'1st'},
+  // DL0576 MEX 11:10 CDT = 16:10 UTC; PBI arr 20:51 EDT = 00:51+1 UTC; dur=521min
+  {date:'2026-07-07',depH:16,depM:10,durationMins:521,miles:1304,fromCode:'MEX',toCode:'PBI',fromLabel:'Mexico City',toLabel:'West Palm Beach',fromCoords:[19.4363,-99.0721],toCoords:[26.6832,-80.0956],flightNo:'DL0576',route:'1st'},
+  // ── ROUTE 2 ──
+  // DL5019 LGA 19:24 EDT = 23:24 UTC; YYZ arr 21:19 EDT = 01:19+1 UTC; dur=115min
+  {date:'2026-06-29',depH:23,depM:24,durationMins:115,miles:550,fromCode:'LGA',toCode:'YYZ',fromLabel:'New York',toLabel:'Toronto',fromCoords:[40.7769,-73.874],toCoords:[43.6798,-79.6284],flightNo:'DL5019',route:'2nd'},
+  // AC1031 YYZ 09:15 EDT = 13:15 UTC; DFW arr 11:35 CDT = 16:35 UTC; dur=200min
+  {date:'2026-07-04',depH:13,depM:15,durationMins:200,miles:1560,fromCode:'YYZ',toCode:'DFW',fromLabel:'Toronto',toLabel:'Dallas',fromCoords:[43.6798,-79.6284],toCoords:[32.8998,-97.0403],flightNo:'AC1031',route:'2nd'},
+  // ── BOTH (Final trip) ──
+  // BA0179 LHR 17:25 BST = 16:25 UTC; JFK arr 20:20 EDT = 00:20+1 UTC; dur=475min
+  {date:'2026-07-16',depH:16,depM:25,durationMins:475,miles:3459,fromCode:'LHR',toCode:'JFK',fromLabel:'London',toLabel:'New York',fromCoords:[51.47,-0.4543],toCoords:[40.6413,-73.7781],flightNo:'BA0179',route:'both'},
+  // BA0174 JFK 18:40 EDT = 22:40 UTC; LHR arr 06:50+1 BST = 05:50+1 UTC; dur=490min
+  {date:'2026-07-21',depH:22,depM:40,durationMins:490,miles:3459,fromCode:'JFK',toCode:'LHR',fromLabel:'New York',toLabel:'London',fromCoords:[40.6413,-73.7781],toCoords:[51.47,-0.4543],flightNo:'BA0174',route:'both'},
+];
+
+// Returns the active in-flight entry (or null) with a pct (0..1) progress value.
+function getActiveFlight(){
+  const nowUTC=new Date();
+  for(const f of FLIGHT_SCHEDULE){
+    if(f.route!=='both'&&f.route!==currentRoute)continue;
+    const dep=new Date(Date.UTC(
+      parseInt(f.date.slice(0,4)),parseInt(f.date.slice(5,7))-1,parseInt(f.date.slice(8,10)),
+      f.depH,f.depM,0,0));
+    const arr=new Date(dep.getTime()+f.durationMins*60000);
+    if(nowUTC>=dep&&nowUTC<arr){
+      const elapsedMins=(nowUTC-dep)/60000;
+      const pct=elapsedMins/f.durationMins;
+      return{...f,dep,arr,pct,elapsedMins:Math.round(elapsedMins),remainMins:Math.round(f.durationMins-elapsedMins)};
+    }
+  }
+  return null;
+}
+
+// Spherical linear interpolation along a great-circle arc.
+function interpolateGreatCircle(a,b,t){
+  const R=Math.PI/180;
+  const lat1=a[0]*R,lng1=a[1]*R,lat2=b[0]*R,lng2=b[1]*R;
+  const d=2*Math.asin(Math.sqrt(Math.pow(Math.sin((lat2-lat1)/2),2)+Math.cos(lat1)*Math.cos(lat2)*Math.pow(Math.sin((lng2-lng1)/2),2)));
+  if(d<1e-9)return[a[0],a[1]];
+  const A=Math.sin((1-t)*d)/Math.sin(d),B=Math.sin(t*d)/Math.sin(d);
+  const x=A*Math.cos(lat1)*Math.cos(lng1)+B*Math.cos(lat2)*Math.cos(lng2);
+  const y=A*Math.cos(lat1)*Math.sin(lng1)+B*Math.cos(lat2)*Math.sin(lng2);
+  const z=A*Math.sin(lat1)+B*Math.sin(lat2);
+  return[(Math.atan2(z,Math.sqrt(x*x+y*y)))/R,(Math.atan2(y,x))/R];
+}
+
+function fmtMins(m){
+  if(m<=0)return'<1m';
+  const h=Math.floor(m/60),mins=Math.round(m%60);
+  return h>0?`${h}h ${mins}m`:`${mins}m`;
+}
+
 // ── MAP (Leaflet + animated route) ────────────────────────────────────────────
 let leafletMap=null;
 let _mapDays=null;
@@ -1541,24 +1608,125 @@ function renderMap(){
   const el=document.getElementById('leaflet-map');
   if(!el)return;
   if(leafletMap){leafletMap.remove();leafletMap=null;}
+
+  // ── Check for active flight and render live banner + stats ──────────────────
+  const af=getActiveFlight();
+  const mapWrap=el.closest('.map-container')||el.parentElement;
+
+  // Remove any previous flight UI elements before re-rendering
+  ['live-flight-banner','live-flight-progress','live-flight-stats'].forEach(id=>{
+    const old=document.getElementById(id);
+    if(old)old.remove();
+  });
+
+  if(af){
+    const pctDisplay=Math.round(af.pct*100);
+    const milesDone=Math.round(af.pct*af.miles||0);
+    const milesLeft=Math.round((1-af.pct)*(af.miles||0));
+
+    // Live banner above the map
+    const banner=document.createElement('div');
+    banner.id='live-flight-banner';
+    banner.style.cssText='background:linear-gradient(135deg,#0a1e5e 0%,#0e2a7a 100%);border-bottom:1px solid rgba(200,169,110,.3);padding:10px 14px;display:flex;align-items:center;gap:10px;';
+    banner.innerHTML=`
+      <div style="background:#CF2B37;color:#fff;font-size:10px;font-weight:800;letter-spacing:.8px;padding:3px 8px;border-radius:20px;display:flex;align-items:center;gap:5px;flex-shrink:0">
+        <span style="width:6px;height:6px;background:#fff;border-radius:50%;display:inline-block;animation:liveDot 1.2s ease-in-out infinite"></span>LIVE
+      </div>
+      <div style="font-size:13px;color:#FDE9C8;flex:1"><strong style="color:#C8A96E">${af.flightNo}</strong> · ${af.fromLabel} → ${af.toLabel}</div>
+      <div style="font-size:11px;color:rgba(253,233,200,.6);text-align:right;flex-shrink:0">
+        <strong style="color:#FDE9C8;display:block;font-size:13px">${fmtMins(af.remainMins)}</strong>to land
+      </div>`;
+    mapWrap.insertBefore(banner,el);
+
+    // Progress bar
+    const prog=document.createElement('div');
+    prog.id='live-flight-progress';
+    prog.style.cssText='background:#0d1f52;padding:9px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid rgba(200,169,110,.12);';
+    prog.innerHTML=`
+      <div style="font-size:11px;color:rgba(253,233,200,.6);white-space:nowrap"><strong style="color:#FDE9C8">${af.fromCode}</strong></div>
+      <div style="flex:1;height:4px;background:rgba(255,255,255,.12);border-radius:2px;position:relative;overflow:visible">
+        <div style="height:100%;width:${pctDisplay}%;background:linear-gradient(90deg,#C8A96E,#e8c87a);border-radius:2px;position:relative">
+          <span style="position:absolute;right:-9px;top:-9px;font-size:16px;line-height:1;filter:drop-shadow(0 0 4px rgba(200,169,110,.9))">✈</span>
+        </div>
+      </div>
+      <div style="font-size:11px;color:rgba(253,233,200,.6);white-space:nowrap"><strong style="color:#FDE9C8">${af.toCode}</strong></div>
+      <div style="font-size:12px;font-weight:700;color:#C8A96E;white-space:nowrap;min-width:32px;text-align:right">${pctDisplay}%</div>`;
+    mapWrap.insertBefore(prog,el);
+
+    // Stats strip (4 cells)
+    const stats=document.createElement('div');
+    stats.id='live-flight-stats';
+    stats.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);background:#0d1f52;border-bottom:1px solid rgba(200,169,110,.12);';
+    const cells=[
+      {val:milesDone.toLocaleString(),lbl:'mi flown',col:'#C8A96E'},
+      {val:milesLeft.toLocaleString(),lbl:'mi remain',col:'#FDE9C8'},
+      {val:'38,000',lbl:'ft altitude',col:'#FDE9C8'},
+      {val:fmtMins(af.remainMins),lbl:'ETA',col:'#CF2B37'},
+    ];
+    stats.innerHTML=cells.map((c,i)=>`
+      <div style="padding:9px 6px;text-align:center;${i<3?'border-right:1px solid rgba(200,169,110,.1)':''}">
+        <div style="font-size:15px;font-weight:800;color:${c.col};line-height:1">${c.val}</div>
+        <div style="font-size:9px;color:rgba(253,233,200,.45);text-transform:uppercase;letter-spacing:.5px;margin-top:3px">${c.lbl}</div>
+      </div>`).join('');
+    mapWrap.insertBefore(stats,el);
+  }
+
   const map=L.map(el,{zoomControl:true,scrollWheelZoom:false});
   leafletMap=map;
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:'&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',maxZoom:13
   }).addTo(map);
-  const coords=allCities.map(c=>[c.lat,c.lng]);
+
   const LONDON_COORDS=[51.51,-0.13];
-  coords.push(LONDON_COORDS); // flight home — route loops back to London at the end
+  // If in flight, include both endpoints in bounds so the arc fits
+  const boundCities=af?[...allCities,{lat:af.fromCoords[0],lng:af.fromCoords[1]},{lat:af.toCoords[0],lng:af.toCoords[1]}]:allCities;
+  const coords=boundCities.map(c=>[c.lat||c[0],c.lng||c[1]]);
+  coords.push(LONDON_COORDS);
   map.fitBounds(L.latLngBounds(coords),{padding:[40,40]});
-  // Animated route
+
+  // Animated route polyline
   let drawn=[];const poly=L.polyline([],{color:'#C8102E',weight:3,opacity:.7,dashArray:'8,5'}).addTo(map);
-  function nextLeg(i){if(i>=coords.length)return;drawn.push(coords[i]);poly.setLatLngs(drawn);setTimeout(()=>nextLeg(i+1),i===0?200:500);}
+  function nextLeg(i){if(i>=allCities.length+1)return;const c=i<allCities.length?[allCities[i].lat,allCities[i].lng]:LONDON_COORDS;drawn.push(c);poly.setLatLngs(drawn);setTimeout(()=>nextLeg(i+1),i===0?200:500);}
   setTimeout(()=>nextLeg(0),300);
+
+  // ── If in-flight: draw arc and plane marker ─────────────────────────────────
+  if(af){
+    // Build great-circle arc with 40 intermediate points
+    const arcPts=[];
+    for(let i=0;i<=40;i++){
+      arcPts.push(interpolateGreatCircle(af.fromCoords,af.toCoords,i/40));
+    }
+    const splitIdx=Math.round(af.pct*40);
+    // Flown portion (gold solid)
+    L.polyline(arcPts.slice(0,splitIdx+1).map(p=>[p[0],p[1]]),{color:'#C8A96E',weight:3,opacity:.9}).addTo(map);
+    // Remaining portion (faint dashed)
+    L.polyline(arcPts.slice(splitIdx).map(p=>[p[0],p[1]]),{color:'#C8A96E',weight:2,opacity:.35,dashArray:'5,5'}).addTo(map);
+
+    // Plane emoji marker at current position
+    const planePos=interpolateGreatCircle(af.fromCoords,af.toCoords,af.pct);
+    const planeIcon=L.divIcon({
+      className:'',
+      html:'<div style="font-size:22px;line-height:1;filter:drop-shadow(0 0 6px rgba(200,169,110,.9));transform:rotate(-45deg)">✈</div>',
+      iconAnchor:[11,11]
+    });
+    L.marker([planePos[0],planePos[1]],{icon:planeIcon,interactive:false}).addTo(map);
+
+    // Pulsing ring at destination
+    const destIcon=L.divIcon({
+      className:'',
+      html:'<div style="width:18px;height:18px;border:2px dashed #C8A96E;border-radius:50%;animation:planeRing 2s ease-in-out infinite;opacity:.8"></div>',
+      iconAnchor:[9,9]
+    });
+    L.marker([af.toCoords[0],af.toCoords[1]],{icon:destIcon,interactive:false}).addTo(map)
+      .bindPopup(`<strong>${af.toLabel}</strong><br><span style="color:#CF2B37;font-size:11px">Landing in ${fmtMins(af.remainMins)}</span>`,{closeButton:false});
+  }
+
   // Markers
   for(const c of allCities){
     const today2=new Date().toISOString().slice(0,10);
     const onTrip=today2>='2026-06-22'&&today2<='2026-07-20';
-    const isCurr=onTrip?(currentCity&&(currentCity.includes(c.key)||c.key.includes(currentCity.split('\u2192')[0].trim()))):(c.key==='LONDON');
+    // While in flight, neither endpoint city gets the "here now" red dot
+    const isCurr=!af&&onTrip?(currentCity&&(currentCity.includes(c.key)||c.key.includes(currentCity.split('\u2192')[0].trim()))):(c.key==='LONDON'&&!onTrip);
     const isVis=visited.has(c.key)||[...visited].some(v=>v.includes(c.key)||c.key.includes(v));
     const color=isCurr?'#C8102E':c.key==='LONDON'||isVis?'#012169':'#8892B0';
     const r=isCurr?10:7;
@@ -1627,7 +1795,7 @@ function getTodayEntry(days){
 // ── OFFLINE (Service Worker) ──────────────────────────────────────────────────
 if('serviceWorker' in navigator){
   const swCode=`
-const CACHE='dom-wc26-v42';
+const CACHE='dom-wc26-v43';
 const SHELL=['./'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});
