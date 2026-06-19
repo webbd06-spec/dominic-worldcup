@@ -209,6 +209,48 @@ body{min-height:100vh;overflow-x:hidden}
 .about-card h3{font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:6px}
 .about-card p{font-size:13px;color:var(--text-secondary);line-height:1.65}
 
+/* ── JUSTGIVING MOCK ───────────────────────────────────────────────── */
+.jg-wrap{padding:0 0 40px}
+.jg-hero{background:#00B640;padding:28px 20px 20px;text-align:center;position:relative}
+.jg-logo{font-size:11px;font-weight:700;letter-spacing:.12em;color:rgba(255,255,255,.7);text-transform:uppercase;margin-bottom:14px}
+.jg-logo span{color:#fff}
+.jg-avatar{width:80px;height:80px;border-radius:50%;background:#fff;border:3px solid rgba(255,255,255,.5);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:38px;overflow:hidden}
+.jg-name{font-size:20px;font-weight:700;color:#fff;margin-bottom:4px}
+.jg-tagline{font-size:13px;color:rgba(255,255,255,.85);line-height:1.5;max-width:280px;margin:0 auto}
+.jg-body{padding:20px}
+.jg-thermometer{background:#fff;border:1px solid #E0E0E0;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.jg-raised{font-size:28px;font-weight:700;color:#00B640;line-height:1}
+.jg-raised-sub{font-size:12px;color:#777;margin-top:2px;margin-bottom:12px}
+.jg-progress-track{background:#E8F5E9;border-radius:99px;height:14px;overflow:hidden;margin-bottom:8px}
+.jg-progress-fill{background:linear-gradient(90deg,#00B640,#00D44A);height:100%;border-radius:99px;transition:width 1.2s ease}
+.jg-progress-meta{display:flex;justify-content:space-between;font-size:11px;color:#777}
+.jg-donate-btn{display:block;width:100%;background:#00B640;color:#fff;font-size:15px;font-weight:700;padding:14px;border-radius:8px;border:none;cursor:pointer;letter-spacing:.02em;margin-bottom:12px;text-align:center;text-decoration:none}
+.jg-donate-btn:active{background:#009933}
+.jg-share-row{display:flex;gap:8px;margin-bottom:20px}
+.jg-share-btn{flex:1;background:#F5F5F5;border:1px solid #E0E0E0;border-radius:8px;padding:10px;font-size:12px;font-weight:600;color:#333;cursor:pointer;text-align:center}
+.jg-section-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#888;margin-bottom:10px}
+.jg-story{background:#FAFAFA;border:1px solid #EBEBEB;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#444;line-height:1.7}
+.jg-story p{margin-bottom:10px}
+.jg-story p:last-child{margin-bottom:0}
+.jg-story strong{color:#222}
+.jg-donors{background:#fff;border:1px solid #E0E0E0;border-radius:10px;overflow:hidden;margin-bottom:16px}
+.jg-donor{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid #F0F0F0}
+.jg-donor:last-child{border-bottom:none}
+.jg-donor-avatar{width:36px;height:36px;border-radius:50%;background:#E8F5E9;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.jg-donor-info{flex:1;min-width:0}
+.jg-donor-name{font-size:13px;font-weight:600;color:#222}
+.jg-donor-msg{font-size:11px;color:#777;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jg-donor-amount{font-size:13px;font-weight:700;color:#00B640;flex-shrink:0}
+.jg-disclaimer{font-size:10px;color:#bbb;text-align:center;line-height:1.6;padding:0 10px}
+.jg-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.jg-modal-overlay.open{opacity:1;pointer-events:all}
+.jg-modal{background:#fff;border-radius:14px;padding:24px 20px;max-width:320px;width:100%;text-align:center;transform:scale(.95);transition:transform .2s}
+.jg-modal-overlay.open .jg-modal{transform:scale(1)}
+.jg-modal-icon{font-size:44px;margin-bottom:12px}
+.jg-modal-title{font-size:18px;font-weight:700;color:#222;margin-bottom:8px}
+.jg-modal-body{font-size:13px;color:#555;line-height:1.6;margin-bottom:18px}
+.jg-modal-close{background:#00B640;color:#fff;border:none;border-radius:8px;padding:11px 24px;font-size:14px;font-weight:700;cursor:pointer;width:100%}
+
 /* FOOTER */
 .site-footer{padding:20px;text-align:center;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border);margin-top:8px}
 .status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#22C55E;margin-right:5px;vertical-align:middle;animation:pulse 2s infinite}
@@ -422,6 +464,9 @@ body.admin-unlocked .wall-delete-btn{display:inline-block}
 /* Thumbnail delete dot — visible only when gallery unlocked */
 .gallery-del-dot{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:#CF2B37;border:1.5px solid #fff;display:none;align-items:center;justify-content:center;font-size:10px;color:#fff;cursor:pointer;z-index:2;line-height:1}
 body.gallery-unlocked .gallery-del-dot{display:flex}
+.gallery-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.gallery-filter-pill{font-size:11px;font-weight:600;padding:5px 11px;border-radius:99px;border:1.5px solid var(--border);background:var(--white);color:var(--text-muted);cursor:pointer;letter-spacing:.03em;white-space:nowrap;transition:all .15s}
+.gallery-filter-pill.active{background:var(--navy);color:#fff;border-color:var(--navy)}
 body.gallery-unlocked .gallery-add-btn.locked{background:var(--navy);color:var(--white);border:none;cursor:pointer;pointer-events:auto}
 
 </style>
@@ -526,6 +571,7 @@ body.gallery-unlocked .gallery-add-btn.locked{background:var(--navy);color:var(-
   <button class="tab" onclick="showTab('map',this)">Map</button>
   <button class="tab" onclick="showTab('gallery',this)">📷 Gallery</button>
   <button class="tab" onclick="showTab('wall',this)">💬 Wall</button>
+  <button class="tab" onclick="showTab('donate',this)">💚 Donate</button>
   <button class="tab" onclick="showTab('flights',this)">Flights</button>
   <button class="tab" onclick="showTab('route',this)">Route</button>
   <button class="tab" onclick="showTab('stadiums',this)">Stadiums</button>
@@ -643,6 +689,55 @@ body.gallery-unlocked .gallery-add-btn.locked{background:var(--navy);color:var(-
   </div>
 </div>
 
+<div id="tab-donate" class="panel">
+  <div class="jg-hero">
+    <div class="jg-logo-bar">💚 <span style="font-size:10px;font-weight:700;letter-spacing:.14em;color:rgba(255,255,255,.7);text-transform:uppercase">just<span style="color:#fff">giving</span></span>
+    </div>
+    <div class="jg-avatar">⚽</div>
+    <div class="jg-name">Dominic's World Cup Fund</div>
+    <div class="jg-tagline">Help Dom afford to watch England lose on penalties across 6 cities and 2 countries</div>
+  </div>
+  <div class="jg-body">
+    <div class="jg-thermometer">
+      <div class="jg-raised">£4,612.00</div>
+      <div class="jg-raised-sub">raised of £6,030.38 goal · 27 supporters</div>
+      <div class="jg-progress-track"><div class="jg-progress-fill" style="width:73%"></div></div>
+      <div class="jg-progress-meta"><span>73% funded</span><span>9 days left</span></div>
+    </div>
+    <button class="jg-donate-btn" onclick="document.getElementById('jg-modal').classList.add('open')">💳 Donate now</button>
+    <div class="jg-share-row">
+      <button class="jg-share-btn">📤 Share</button>
+      <button class="jg-share-btn">💬 WhatsApp</button>
+    </div>
+    <div class="jg-section-title">Dom's story</div>
+    <div class="jg-story">
+      <p>In June 2026, <strong>Dominic</strong> will undertake one of the most gruelling challenges known to mankind: attending a FIFA World Cup with England in it.</p>
+      <p>The route takes him across <strong>6 cities, 2 countries and 21 days</strong> of emotional turmoil — Boston, New York, Atlanta, Mexico City, and Miami — culminating, God willing, in a Quarter-Final.</p>
+      <p>Total trip cost: <strong>£6,030.38</strong>. And rising. Flights alone are £1,735. A single match ticket is £1,358. He has paid <strong>every penny himself</strong>. No sponsors. No crowdfunding. Until now.</p>
+      <p>Your donation goes directly toward Dom's <strong>hotel minibar costs, stadium pints (est. £14/pint in Miami), and the emotional support necessary</strong> to watch England exit on penalties in the Round of 16.</p>
+      <p><em>100% of funds go to Dom. None to charity. We're being honest about this.</em></p>
+    </div>
+    <div class="jg-section-title">Recent supporters</div>
+    <div class="jg-donors">
+      <div class="jg-donor"><div class="jg-donor-avatar">🏴󠁧󠁢󠁥󠁮󠁧󠁿</div><div class="jg-donor-info"><div class="jg-donor-name">Mum</div><div class="jg-donor-msg">"Be safe. Call me. Also this is ridiculous."</div></div><div class="jg-donor-amount">£20.00</div></div>
+      <div class="jg-donor"><div class="jg-donor-avatar">🍺</div><div class="jg-donor-info"><div class="jg-donor-name">Craig</div><div class="jg-donor-msg">"Covering the first round in Miami. That's it."</div></div><div class="jg-donor-amount">£14.00</div></div>
+      <div class="jg-donor"><div class="jg-donor-avatar">😂</div><div class="jg-donor-info"><div class="jg-donor-name">Anonymous</div><div class="jg-donor-msg">"England won't get past the quarters mate"</div></div><div class="jg-donor-amount">£5.00</div></div>
+      <div class="jg-donor"><div class="jg-donor-avatar">❤️</div><div class="jg-donor-info"><div class="jg-donor-name">Ethan</div><div class="jg-donor-msg">"See you in Mexico City lad"</div></div><div class="jg-donor-amount">£0.00</div></div>
+    </div>
+    <div class="jg-disclaimer">This is a satirical fundraiser. Dominic has not actually lost his savings. He did this entirely voluntarily and would do it again. JustGiving takes no fee because this isn't real. England will bottle it anyway.</div>
+  </div>
+</div>
+
+<!-- JustGiving donate modal -->
+<div class="jg-modal-overlay" id="jg-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="jg-modal">
+    <div class="jg-modal-icon">💳</div>
+    <div class="jg-modal-title">Complete your donation</div>
+    <div class="jg-modal-body">Your generosity will go directly toward Dom's minibar tab at the Warwick Melrose, Dallas. The world thanks you for your service.</div>
+    <button class="jg-modal-close" onclick="document.getElementById('jg-modal').classList.remove('open')">Just kidding. It's not real.</button>
+  </div>
+</div>
+
 <div id="tab-gallery" class="panel">
   <div class="gallery-wrap">
     <div class="gallery-header">
@@ -682,6 +777,8 @@ body.gallery-unlocked .gallery-add-btn.locked{background:var(--navy);color:var(-
       </div>
       <div class="wall-error" id="gallery-error"></div>
     </div>
+
+    <div class="gallery-filters" id="gallery-filters" style="display:none"></div>
 
     <div class="gallery-grid" id="gallery-grid">
       <div class="wall-loading" style="grid-column:1/-1">Loading photos…</div>
@@ -1875,7 +1972,7 @@ function getTodayEntry(days){
 // ── OFFLINE (Service Worker) ──────────────────────────────────────────────────
 if('serviceWorker' in navigator){
   const swCode=`
-const CACHE='dom-wc26-v45';
+const CACHE='dom-wc26-v47';
 const SHELL=['./'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});
@@ -2754,6 +2851,7 @@ async function uploadPhoto(){
       caption,
       url:data.secure_url,
       ts:Date.now(),
+      city:(()=>{const d=_allDays&&getTodayEntry(_allDays.filter(x=>x.route===currentRoute));return d?niceCity(d.city):'';})(),
     });
     localStorage.setItem('dom_gallery_name',name);
     btn.disabled=false;btn.textContent='Upload';
@@ -2772,6 +2870,55 @@ function loadGallery(){
   }
   galleryInitialised=true;
   const grid=document.getElementById('gallery-grid');
+  const filtersEl=document.getElementById('gallery-filters');
+
+  // All photo records keyed by Firebase id — used for re-filtering without re-fetching
+  const _allPhotos={};
+  let _activeCity='All';
+
+  function renderFilters(){
+    // Collect unique non-empty cities across all loaded photos, in trip order
+    const tripCities=['Boston','New York City','Atlanta','Toronto','Mexico City','Dallas','Miami'];
+    const seen=new Set(Object.values(_allPhotos).map(p=>p.city||'').filter(Boolean));
+    const ordered=tripCities.filter(c=>seen.has(c));
+    if(ordered.length<2){filtersEl.style.display='none';return;}
+    filtersEl.style.display='flex';
+    filtersEl.innerHTML=['All',...ordered].map(c=>
+      `<button class="gallery-filter-pill${_activeCity===c?' active':''}" onclick="setGalleryFilter('${c}')">${c}</button>`
+    ).join('');
+  }
+
+  function applyFilter(){
+    let count=0;
+    Array.from(grid.children).forEach(el=>{
+      if(el.classList.contains('wall-empty')||el.classList.contains('wall-loading')){el.style.display='';return;}
+      const id=el.id.replace('gi-','');
+      const p=_allPhotos[id];
+      if(!p)return;
+      const match=_activeCity==='All'||( p.city||'')=== _activeCity;
+      el.style.display=match?'':'none';
+      if(match)count++;
+    });
+    // Show empty state only within filtered view
+    let noResults=grid.querySelector('.gallery-no-results');
+    if(count===0&&_activeCity!=='All'){
+      if(!noResults){
+        noResults=document.createElement('div');
+        noResults.className='gallery-no-results wall-empty';
+        noResults.style.gridColumn='1/-1';
+        grid.appendChild(noResults);
+      }
+      noResults.textContent=`No photos from ${_activeCity} yet.`;
+    }else{
+      if(noResults)noResults.remove();
+    }
+  }
+
+  window.setGalleryFilter=function(city){
+    _activeCity=city;
+    renderFilters();
+    applyFilter();
+  };
 
   const q=fbDB.ref('gallery/photos').orderByChild('ts').limitToLast(GALLERY_LIMIT);
 
@@ -2783,22 +2930,30 @@ function loadGallery(){
     }else{
       // child order from Firebase is ascending by ts; prepend each so newest ends up first
       Object.entries(data).forEach(([id,p])=>{
+        _allPhotos[id]=p;
         grid.insertAdjacentHTML('afterbegin',buildGalleryItem(id,p));
       });
+      renderFilters();
     }
-    // Attach live listeners for subsequent changes (existing items are
-    // skipped via the getElementById check, since they're already rendered)
+    // Live listeners for subsequent changes
     q.on('child_added',snap=>{
       const id=snap.key,p=snap.val();
       if(document.getElementById('gi-'+id))return;
+      _allPhotos[id]=p;
       const empty=grid.querySelector('.wall-empty');
       if(empty)empty.remove();
       grid.insertAdjacentHTML('afterbegin',buildGalleryItem(id,p));
+      applyFilter();
+      renderFilters();
     });
     q.on('child_removed',snap=>{
-      const el=document.getElementById('gi-'+snap.key);
+      const id=snap.key;
+      delete _allPhotos[id];
+      const el=document.getElementById('gi-'+id);
       if(el)el.remove();
       if(!grid.children.length)grid.innerHTML='<div class="wall-empty" style="grid-column:1/-1">No photos yet — add the first one! 📷</div>';
+      renderFilters();
+      applyFilter();
     });
   }).catch(e=>{
     grid.innerHTML='<div class="wall-empty" style="grid-column:1/-1">Could not load photos.</div>';
