@@ -943,7 +943,7 @@ async function fetchForecast(city){
 // ── MATCH HISTORY ─────────────────────────────────────────────────────────────
 // Results hardcoded here — update after each match
 const RESULTS=[
-  {date:'2026-06-17',match:'England vs Croatia',venue:'AT&T Stadium, Arlington',ko:'4:00pm ET',score:null},
+  {date:'2026-06-17',match:'England vs Croatia',venue:'AT&T Stadium, Arlington',ko:'4:00pm ET',score:{eng:4,opp:2}},
   {date:'2026-06-23',match:'England vs Ghana',venue:'Gillette Stadium, Foxborough',ko:'4:00pm ET',score:null},
   {date:'2026-06-27',match:'Panama vs England',venue:'MetLife Stadium, New York',ko:'5:00pm ET',score:null},
   {date:'2026-07-01',match:'England — Round of 32 (M80)',venue:'Mercedes-Benz Stadium, Atlanta',ko:'12:00pm ET',score:null},
@@ -953,7 +953,7 @@ const RESULTS=[
   {date:'2026-07-19',match:'England — Final',venue:'MetLife Stadium, New York',ko:'3:00pm ET',score:null},
 ];
 const RESULTS_2ND=[
-  {date:'2026-06-17',match:'England vs Croatia',venue:'AT&T Stadium, Arlington',ko:'4:00pm ET',score:null},
+  {date:'2026-06-17',match:'England vs Croatia',venue:'AT&T Stadium, Arlington',ko:'4:00pm ET',score:{eng:4,opp:2}},
   {date:'2026-06-23',match:'England vs Ghana',venue:'Gillette Stadium, Foxborough',ko:'4:00pm ET',score:null},
   {date:'2026-06-27',match:'Panama vs England',venue:'MetLife Stadium, New York',ko:'5:00pm ET',score:null},
   {date:'2026-07-02',match:'England — Round of 32 (M83)',venue:'BMO Field, Toronto',ko:'6:00pm ET',score:null},
@@ -973,7 +973,7 @@ const RESULTS_2ND=[
 // This also avoids accidentally matching an unrelated match on the same date.
 async function fetchLiveScores(){
   try{
-    const res=await fbFetch('https://api.football-data.org/v4/competitions/2000/matches');
+    const res=await fbFetch('https://api.football-data.org/v4/competitions/WC/matches');
     if(!res.ok)return;
     const d=await res.json();
     const matches=d.matches||[];
@@ -1277,7 +1277,7 @@ async function detectRoute(){
     if(has2ndScore){currentRoute='2nd';return;}
     if(has1stScore){currentRoute='1st';return;}
     // Try live API
-    const r=await fbFetch('https://api.football-data.org/v4/competitions/2000/standings');
+    const r=await fbFetch('https://api.football-data.org/v4/competitions/WC/standings');
     if(!r.ok)return;
     const d=await r.json();
     for(const g of(d.standings||[])){
@@ -1875,7 +1875,7 @@ function getTodayEntry(days){
 // ── OFFLINE (Service Worker) ──────────────────────────────────────────────────
 if('serviceWorker' in navigator){
   const swCode=`
-const CACHE='dom-wc26-v44';
+const CACHE='dom-wc26-v45';
 const SHELL=['./'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});
@@ -2160,8 +2160,8 @@ function buildPlaneStrip(day) {
 
 // ── GROUP L TABLE ──────────────────────────────────────────────────────────
 const GROUP_L_FIXTURES=[
-  {date:'17 Jun',teams:'England vs Croatia',venue:'Dallas',score:null,ko:'4:00pm ET'},
-  {date:'17 Jun',teams:'Ghana vs Panama',venue:'Houston',score:null,ko:'7:00pm ET'},
+  {date:'17 Jun',teams:'England vs Croatia',venue:'Dallas',score:'4-2',ko:'4:00pm ET'},
+  {date:'17 Jun',teams:'Ghana vs Panama',venue:'Toronto',score:'1-0',ko:'7:00pm ET'},
   {date:'23 Jun',teams:'England vs Ghana',venue:'Boston',score:null,ko:'4:00pm ET'},
   {date:'23 Jun',teams:'Panama vs Croatia',venue:'Toronto',score:null,ko:'7:00pm ET'},
   {date:'27 Jun',teams:'Panama vs England',venue:'New York',score:null,ko:'5:00pm ET'},
@@ -2187,8 +2187,8 @@ function buildGroupTable(){
   }
 
   // Try to fetch live standings via football-data.org
-  // Group L is competition 2000 (World Cup), we look for England's group
-  fbFetch('https://api.football-data.org/v4/competitions/2000/standings')
+  // Group L is competition WC (World Cup), we look for England's group
+  fbFetch('https://api.football-data.org/v4/competitions/WC/standings')
     .then(r=>r.ok?r.json():null)
     .then(d=>{
       if(!d||!d.standings)throw new Error('no data');
