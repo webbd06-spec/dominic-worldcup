@@ -1454,7 +1454,7 @@ async function buildHero(day){
     drawPostcard('LONDON');startLocalTime('LONDON');fetchForecast('LONDON');
     const now=new Date();
     const tripStarted=now>=new Date('2026-06-22');
-    const tripEnded=now>new Date('2026-07-20');
+    const tripEnded=now>new Date('2026-07-21');
     const statusMsg=!tripStarted?'Not yet departed — trip begins 22 June 2026':tripEnded?'Trip complete — Dom is home! 🏆':'Itinerary loading…';
     const statusCard=`<div class="hero-card full"><div class="hero-card-label">Status</div><div class="hero-card-value">${statusMsg}</div></div>`;
     document.getElementById('hero-cards').innerHTML=statusCard+buildDrunkMeter(null);
@@ -1638,7 +1638,7 @@ const FLIGHT_SCHEDULE=[
 // correct for delays. Accessed via corsproxy.io to bypass the HTTP-only restriction.
 // Results cached in sessionStorage for 10 minutes to avoid burning the quota.
 // API key: sign up free at aviationstack.com — paste your key below.
-const AVIATIONSTACK_KEY='c752dfc22775151d6118e90908510119';
+const AVIATIONSTACK_KEY='92d4848ceb622e8a97597de27d1abd6b';
 
 async function fetchActualDeparture(flightNo,date){
   if(!AVIATIONSTACK_KEY)return null;
@@ -1901,7 +1901,7 @@ async function renderMap(){
   // Markers
   for(const c of allCities){
     const today2=new Date().toISOString().slice(0,10);
-    const onTrip=today2>='2026-06-22'&&today2<='2026-07-20';
+    const onTrip=today2>='2026-06-22'&&today2<='2026-07-21';
     // While in flight, neither endpoint city gets the "here now" red dot
     const isCurr=!af&&onTrip?(currentCity&&(currentCity.includes(c.key)||c.key.includes(currentCity.split('\u2192')[0].trim()))):(c.key==='LONDON'&&!onTrip);
     const isVis=visited.has(c.key)||[...visited].some(v=>v.includes(c.key)||c.key.includes(v));
@@ -1965,14 +1965,14 @@ function buildRoutePanel(){
 
 function getTodayEntry(days){
   const today=new Date().toISOString().slice(0,10);
-  if(today<'2026-06-17'||today>'2026-07-19')return null;
+  if(today<'2026-06-17'||today>'2026-07-21')return null;
   return days.find(d=>d.date===today)||null;
 }
 
 // ── OFFLINE (Service Worker) ──────────────────────────────────────────────────
 if('serviceWorker' in navigator){
   const swCode=`
-const CACHE='dom-wc26-v47';
+const CACHE='dom-wc26-v49';
 const SHELL=['./'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});
@@ -2258,7 +2258,7 @@ function buildPlaneStrip(day) {
 // ── GROUP L TABLE ──────────────────────────────────────────────────────────
 const GROUP_L_FIXTURES=[
   {date:'17 Jun',teams:'England vs Croatia',venue:'Dallas',score:'4-2',ko:'4:00pm ET'},
-  {date:'17 Jun',teams:'Ghana vs Panama',venue:'Toronto',score:'1-0',ko:'7:00pm ET'},
+  {date:'17 Jun',teams:'Ghana vs Panama',venue:'Houston',score:'1-0',ko:'7:00pm ET'},
   {date:'23 Jun',teams:'England vs Ghana',venue:'Boston',score:null,ko:'4:00pm ET'},
   {date:'23 Jun',teams:'Panama vs Croatia',venue:'Toronto',score:null,ko:'7:00pm ET'},
   {date:'27 Jun',teams:'Panama vs England',venue:'New York',score:null,ko:'5:00pm ET'},
