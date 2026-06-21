@@ -242,6 +242,12 @@ body{min-height:100vh;overflow-x:hidden}
 .jg-donor-msg{font-size:11px;color:#777;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .jg-donor-amount{font-size:13px;font-weight:700;color:#00B640;flex-shrink:0}
 .jg-disclaimer{font-size:10px;color:#bbb;text-align:center;line-height:1.6;padding:0 10px}
+.garden-stage-btn{border:0.5px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;cursor:pointer;background:var(--off-white);color:var(--text-muted);font-family:var(--font-body)}
+.garden-stage-btn.active{background:#012169;color:#fff;border-color:#012169}
+.garden-plant-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:0.5px solid var(--border)}
+.garden-plant-row:last-child{border-bottom:none}
+.garden-prog{height:5px;background:var(--border);border-radius:4px;margin-top:4px;overflow:hidden}
+.garden-prog-bar{height:100%;border-radius:4px;transition:width .4s ease}
 .jg-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
 .jg-modal-overlay.open{opacity:1;pointer-events:all}
 .jg-modal{background:#fff;border-radius:14px;padding:24px 20px;max-width:320px;width:100%;text-align:center;transform:scale(.95);transition:transform .2s}
@@ -570,6 +576,7 @@ body.gallery-unlocked .gallery-add-btn.locked{background:var(--navy);color:var(-
   <button class="tab active" onclick="showTab('timeline',this)">Timeline</button>
   <button class="tab" onclick="showTab('map',this)">Map</button>
   <button class="tab" onclick="showTab('gallery',this)">📷 Gallery</button>
+  <button class="tab" onclick="showTab('garden',this)">🌿 Garden</button>
   <button class="tab" onclick="showTab('wall',this)">💬 Wall</button>
   <button class="tab" onclick="showTab('donate',this)">💚 Donate</button>
   <button class="tab" onclick="showTab('flights',this)">Flights</button>
@@ -800,6 +807,66 @@ body.gallery-unlocked .gallery-add-btn.locked{background:var(--navy);color:var(-
       <button class="wall-delete-btn" id="gallery-lightbox-delete" onclick="deletePhotoFromLightbox(event)">🗑 delete photo</button>
     </div>
     <button class="gallery-lightbox-close" onclick="closeLightbox(event)">✕</button>
+  </div>
+</div>
+
+<!-- GARDEN TAB -->
+<div id="tab-garden" class="panel">
+  <div style="padding:16px 20px; max-width:600px; margin:0 auto; font-family:inherit;">
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+      <button class="garden-stage-btn active" onclick="gardenSetStage(0)">Day 1</button>
+      <button class="garden-stage-btn" onclick="gardenSetStage(1)">Group stage</button>
+      <button class="garden-stage-btn" onclick="gardenSetStage(2)">Round of 32</button>
+      <button class="garden-stage-btn" onclick="gardenSetStage(3)">Round of 16</button>
+      <button class="garden-stage-btn" onclick="gardenSetStage(4)">Quarter-final</button>
+    </div>
+
+    <div id="garden-nathan-tile" style="background:#CF2B37; border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="gardenNathanClick()">
+      <div>
+        <p id="garden-nathan-title" style="font-size:13px; font-weight:500; color:white; margin:0 0 2px;">Send Nathan in to rescue</p>
+        <p id="garden-nathan-sub" style="font-size:11px; color:#fca5a5; margin:0;">Everything is fine. This is just here in case.</p>
+      </div>
+      <span style="font-size:24px;">🆘</span>
+    </div>
+
+    <div style="background:#1a2e1a; border-radius:12px; overflow:hidden; margin-bottom:14px; position:relative;">
+      <div id="garden-cam-wrap" style="aspect-ratio:16/9; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px;">
+        <span style="font-size:36px;">🌿</span>
+        <p style="color:#86efac; font-size:12px; font-family:monospace; margin:0;">RING CAM — Garden</p>
+        <p style="color:#4ade80; font-size:11px; font-family:monospace; margin:0;">Upload a snapshot to show here</p>
+      </div>
+      <div style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.55); border-radius:4px; padding:2px 8px;">
+        <span id="garden-rec-badge" style="color:#f87171; font-size:11px; font-family:monospace;">● SNAPSHOT</span>
+      </div>
+      <div style="position:absolute; bottom:10px; left:10px; background:rgba(0,0,0,0.55); border-radius:4px; padding:2px 8px;">
+        <span style="color:white; font-size:11px; font-family:monospace;" id="garden-cam-date">22 Jun 2026 · London</span>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:14px;">
+      <div style="background:var(--surface); border:0.5px solid var(--border); border-radius:12px; padding:12px;">
+        <p style="font-size:12px; color:var(--muted); margin:0 0 3px;">Plants alive</p>
+        <p id="garden-alive-count" style="font-size:22px; font-weight:500; margin:0; color:#22c55e;">44/44</p>
+        <p id="garden-alive-sub" style="font-size:11px; color:var(--muted2); margin:4px 0 0;">Day 1 streak</p>
+      </div>
+      <div style="background:var(--surface); border:0.5px solid var(--border); border-radius:12px; padding:12px;">
+        <p style="font-size:12px; color:var(--muted); margin:0 0 3px;">Garden status</p>
+        <p id="garden-status-word" style="font-size:15px; font-weight:500; margin:0; padding-top:4px;">Thriving</p>
+        <p id="garden-status-sub" style="font-size:11px; color:var(--muted2); margin:4px 0 0;">Dom's pride and joy</p>
+      </div>
+      <div style="background:var(--surface); border:0.5px solid var(--border); border-radius:12px; padding:12px;">
+        <p style="font-size:12px; color:var(--muted); margin:0 0 3px;">Last updated</p>
+        <p id="garden-updated-time" style="font-size:15px; font-weight:500; margin:0; padding-top:4px;">Today</p>
+        <p id="garden-updated-sub" style="font-size:11px; color:var(--muted2); margin:4px 0 0;">Ring cam snapshot</p>
+      </div>
+    </div>
+
+    <div style="background:var(--surface); border:0.5px solid var(--border); border-radius:12px; padding:14px;">
+      <p style="font-size:13px; font-weight:500; margin:0 0 10px;">Plant health log</p>
+      <div id="garden-plant-list"></div>
+    </div>
+
   </div>
 </div>
 
@@ -1977,7 +2044,7 @@ function getTodayEntry(days){
 // ── OFFLINE (Service Worker) ──────────────────────────────────────────────────
 if('serviceWorker' in navigator){
   const swCode=`
-const CACHE='dom-wc26-v50';
+const CACHE='dom-wc26-v51';
 const SHELL=['./'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});
@@ -3058,6 +3125,167 @@ if(sessionStorage.getItem('dom_gallery_unlocked')==='1'){
   if(us)us.style.display='block';
   if(ab)ab.classList.remove('locked');
 }
+
+// ── GARDEN TAB ──────────────────────────────────────────────────
+const GARDEN_STAGES = [
+  {
+    label:'Day 1', date:'22 Jun 2026 · London',
+    alive:'44/44', aliveColor:'#22c55e', aliveSub:'Day 1 streak',
+    statusWord:'Thriving', statusSub:"Dom's pride and joy",
+    updatedTime:'Today', updatedSub:'Ring cam snapshot',
+    nathanTitle:'Send Nathan in to rescue',
+    nathanSub:'Everything is fine. This is just here in case.',
+    plants:[
+      {e:'🍅',n:'Tomatoes',pct:90,c:'#22c55e',s:'Thriving'},
+      {e:'🥒',n:'Cucumbers',pct:88,c:'#22c55e',s:'Thriving'},
+      {e:'🥬',n:'Courgettes',pct:92,c:'#22c55e',s:'Thriving'},
+      {e:'🍆',n:'Aubergines',pct:85,c:'#22c55e',s:'Happy'},
+      {e:'🫛',n:'Peas',pct:80,c:'#22c55e',s:'Looking good'},
+      {e:'🥗',n:'Rocket',pct:88,c:'#22c55e',s:'Lush'},
+      {e:'🥦',n:'Cavolo nero',pct:82,c:'#22c55e',s:'Solid'},
+      {e:'🌈',n:'Swiss chard',pct:86,c:'#22c55e',s:'Colourful'},
+      {e:'🟢',n:'Brussels sprouts',pct:78,c:'#22c55e',s:'On track'},
+      {e:'🌶️',n:'Chilli peppers',pct:84,c:'#22c55e',s:'Fiery start'},
+      {e:'🍓',n:'Strawberries',pct:90,c:'#22c55e',s:'Juicy'},
+    ]
+  },
+  {
+    label:'Group stage', date:'25 Jun 2026 · London',
+    alive:'41/44', aliveColor:'#22c55e', aliveSub:'3 lost to slugs',
+    statusWord:'Doing well', statusSub:'Minor casualties',
+    updatedTime:'3 days ago', updatedSub:'Ring cam snapshot',
+    nathanTitle:'Send Nathan in to rescue',
+    nathanSub:'Not urgent. But maybe check in.',
+    plants:[
+      {e:'🍅',n:'Tomatoes',pct:82,c:'#22c55e',s:'Good'},
+      {e:'🥒',n:'Cucumbers',pct:75,c:'#22c55e',s:'Could use water'},
+      {e:'🥬',n:'Courgettes',pct:95,c:'#22c55e',s:'Taking over slightly'},
+      {e:'🍆',n:'Aubergines',pct:70,c:'#f59e0b',s:'A bit sad'},
+      {e:'🫛',n:'Peas',pct:65,c:'#f59e0b',s:'Struggling'},
+      {e:'🥗',n:'Rocket',pct:78,c:'#22c55e',s:'Bolting a bit'},
+      {e:'🥦',n:'Cavolo nero',pct:72,c:'#22c55e',s:'Hanging in'},
+      {e:'🌈',n:'Swiss chard',pct:80,c:'#22c55e',s:'Still vivid'},
+      {e:'🟢',n:'Brussels sprouts',pct:60,c:'#f59e0b',s:'Slow going'},
+      {e:'🌶️',n:'Chilli peppers',pct:75,c:'#22c55e',s:'Getting spicy'},
+      {e:'🍓',n:'Strawberries',pct:70,c:'#22c55e',s:'A few eaten'},
+    ]
+  },
+  {
+    label:'Round of 32', date:'1 Jul 2026 · London',
+    alive:'33/44', aliveColor:'#f59e0b', aliveSub:'11 down',
+    statusWord:'Concerning', statusSub:'Nathan on standby',
+    updatedTime:'9 days ago', updatedSub:'Ring cam snapshot',
+    nathanTitle:'Send Nathan in to rescue',
+    nathanSub:'This is becoming less optional.',
+    plants:[
+      {e:'🍅',n:'Tomatoes',pct:60,c:'#f59e0b',s:'Need attention'},
+      {e:'🥒',n:'Cucumbers',pct:45,c:'#f59e0b',s:'Wilting'},
+      {e:'🥬',n:'Courgettes',pct:100,c:'#22c55e',s:'Completely unstoppable'},
+      {e:'🍆',n:'Aubergines',pct:30,c:'#ef4444',s:'Thoughts and prayers'},
+      {e:'🫛',n:'Peas',pct:35,c:'#ef4444',s:'Gone to seed'},
+      {e:'🥗',n:'Rocket',pct:40,c:'#f59e0b',s:'Fully bolted'},
+      {e:'🥦',n:'Cavolo nero',pct:55,c:'#f59e0b',s:'Barely'},
+      {e:'🌈',n:'Swiss chard',pct:50,c:'#f59e0b',s:'Fading fast'},
+      {e:'🟢',n:'Brussels sprouts',pct:35,c:'#ef4444',s:'Sulking'},
+      {e:'🌶️',n:'Chilli peppers',pct:65,c:'#f59e0b',s:'Drying out'},
+      {e:'🍓',n:'Strawberries',pct:25,c:'#ef4444',s:'Birds got them'},
+    ]
+  },
+  {
+    label:'Round of 16', date:'5 Jul 2026 · London',
+    alive:'21/44', aliveColor:'#f59e0b', aliveSub:'23 down',
+    statusWord:'It is bad', statusSub:'The courgettes won',
+    updatedTime:'13 days ago', updatedSub:'Ring cam snapshot',
+    nathanTitle:'Send Nathan in to rescue',
+    nathanSub:'Nathan, please. Please Nathan.',
+    plants:[
+      {e:'🍅',n:'Tomatoes',pct:35,c:'#ef4444',s:'Critical'},
+      {e:'🥒',n:'Cucumbers',pct:15,c:'#ef4444',s:'Gone'},
+      {e:'🥬',n:'Courgettes',pct:100,c:'#22c55e',s:'Achieved sentience'},
+      {e:'🍆',n:'Aubergines',pct:10,c:'#ef4444',s:'RIP'},
+      {e:'🫛',n:'Peas',pct:10,c:'#ef4444',s:'RIP'},
+      {e:'🥗',n:'Rocket',pct:15,c:'#ef4444',s:'Just sticks now'},
+      {e:'🥦',n:'Cavolo nero',pct:30,c:'#ef4444',s:'Barely there'},
+      {e:'🌈',n:'Swiss chard',pct:20,c:'#ef4444',s:'Lost the colour'},
+      {e:'🟢',n:'Brussels sprouts',pct:15,c:'#ef4444',s:'Gone rogue'},
+      {e:'🌶️',n:'Chilli peppers',pct:40,c:'#f59e0b',s:'Crispy'},
+      {e:'🍓',n:'Strawberries',pct:5,c:'#ef4444',s:'All gone'},
+    ]
+  },
+  {
+    label:'Quarter-final', date:'8 Jul 2026 · London',
+    alive:'9/44', aliveColor:'#ef4444', aliveSub:'35 down',
+    statusWord:'Scorched earth', statusSub:'The courgettes rule all',
+    updatedTime:'16 days ago', updatedSub:'Ring cam snapshot',
+    nathanTitle:'SEND NATHAN IN NOW',
+    nathanSub:'This is a humanitarian crisis.',
+    plants:[
+      {e:'🍅',n:'Tomatoes',pct:5,c:'#ef4444',s:'Gone'},
+      {e:'🥒',n:'Cucumbers',pct:0,c:'#ef4444',s:'Gone'},
+      {e:'🥬',n:'Courgettes',pct:100,c:'#22c55e',s:'World domination achieved'},
+      {e:'🍆',n:'Aubergines',pct:0,c:'#ef4444',s:'Gone'},
+      {e:'🫛',n:'Peas',pct:0,c:'#ef4444',s:'Gone'},
+      {e:'🥗',n:'Rocket',pct:0,c:'#ef4444',s:'Gone'},
+      {e:'🥦',n:'Cavolo nero',pct:5,c:'#ef4444',s:'Nearly gone'},
+      {e:'🌈',n:'Swiss chard',pct:0,c:'#ef4444',s:'Gone'},
+      {e:'🟢',n:'Brussels sprouts',pct:0,c:'#ef4444',s:'Gone'},
+      {e:'🌶️',n:'Chilli peppers',pct:10,c:'#ef4444',s:'Ash'},
+      {e:'🍓',n:'Strawberries',pct:0,c:'#ef4444',s:'Gone'},
+    ]
+  }
+];
+
+let gardenCurrentStage = 0;
+
+function gardenSetStage(i) {
+  gardenCurrentStage = i;
+  const s = GARDEN_STAGES[i];
+  document.querySelectorAll('.garden-stage-btn').forEach((b,j) => {
+    b.classList.toggle('active', j === i);
+  });
+  document.getElementById('garden-alive-count').textContent = s.alive;
+  document.getElementById('garden-alive-count').style.color = s.aliveColor;
+  document.getElementById('garden-alive-sub').textContent = s.aliveSub;
+  document.getElementById('garden-status-word').textContent = s.statusWord;
+  document.getElementById('garden-status-sub').textContent = s.statusSub;
+  document.getElementById('garden-updated-time').textContent = s.updatedTime;
+  document.getElementById('garden-updated-sub').textContent = s.updatedSub;
+  document.getElementById('garden-cam-date').textContent = s.date;
+  document.getElementById('garden-nathan-title').textContent = s.nathanTitle;
+  document.getElementById('garden-nathan-sub').textContent = s.nathanSub;
+  const list = document.getElementById('garden-plant-list');
+  if (!list) return;
+  list.innerHTML = s.plants.map(p => {
+    const pct = p.pct > 0 ? p.pct : 0;
+    return '<div class="garden-plant-row">'
+      + '<span style="font-size:16px;">' + p.e + '</span>'
+      + '<div style="flex:1;min-width:0;">'
+      + '<p style="font-size:13px;margin:0;">' + p.n + '</p>'
+      + '<div class="garden-prog"><div class="garden-prog-bar" style="width:' + pct + '%;background:' + p.c + ';"></div></div>'
+      + '</div>'
+      + '<span style="font-size:11px;font-weight:500;color:' + p.c + ';white-space:nowrap;">' + p.s + '</span>'
+      + '</div>';
+  }).join('');
+}
+
+function gardenNathanClick() {
+  const sub = document.getElementById('garden-nathan-sub');
+  if (!sub) return;
+  const orig = sub.textContent;
+  sub.textContent = 'Alerting Nathan... (not really)';
+  setTimeout(function() { sub.textContent = orig; }, 2000);
+}
+
+// initialise garden on first open
+const _origShowTabGarden = showTab;
+showTab = function(name, btn) {
+  _origShowTabGarden(name, btn);
+  if (name === 'garden') {
+    gardenSetStage(gardenCurrentStage);
+  }
+};
+// ── END GARDEN TAB ───────────────────────────────────────────────
+
 
 init();
 </script>
