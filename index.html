@@ -1430,7 +1430,7 @@ function getFlightSummary(date,city,route){
     if(!r||r.length<6)continue;
     const rd=(r[0]||'').trim();
     if(!rd.includes(date)&&!(rd.includes(dd)&&rd.includes(mon)))continue;
-    const fr=(r[2]||'').trim(),to=(r[3]||'').trim(),al=(r[4]||'').trim(),ti=(r[5]||'').trim();
+    const fr=(r[3]||'').trim(),to=(r[4]||'').trim(),al=(r[5]||'').trim(),ti=(r[6]||'').trim();
     if(fr&&to)return'\u2708 '+fr+' \u2192 '+to+(al?' \u00b7 '+al:'')+(ti?' \u00b7 '+ti:'');
   }
   return'\u2708 Flying';
@@ -2045,7 +2045,7 @@ function getTodayEntry(days){
 // ── OFFLINE (Service Worker) ──────────────────────────────────────────────────
 if('serviceWorker' in navigator){
   const swCode=`
-const CACHE='dom-wc26-v56';
+const CACHE='dom-wc26-v57';
 const SHELL=['./'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});
@@ -2423,32 +2423,48 @@ function renderFlightCards(rows,wrap){
   }
 
   const today=new Date().toISOString().slice(0,10);
-  // Parse rows: A=date, B=flight no, C=from, D=to, E=airline, F=times
+  // Sheet columns: A=raw date, B=formatted date ("Mon, Jun 22"), C=flight no,
+  // D=from, E=to, F=airline, G=times
   // Skip header row
   const flights=rows.filter(r=>{
     if(!r||r.length<2)return false;
     const d=(r[0]||'').trim();
     if(d==='Date'||d==='')return false;
-    // Must have a date-like value
+    // Must have a date-like value in col A
     return d.match(/\d{4}|\d{1,2}[\s\-\/][A-Za-z]/)||d.length>3;
   }).map(r=>{
     const raw=(r[0]||'').trim();
-    // Try to extract YYYY-MM-DD date
+    // Col A: try YYYY-MM-DD first
+    let date=null;
     const iso=raw.match(/(\d{4}-\d{2}-\d{2})/);
-    // Also try DD Mon YYYY or Mon DD formats
-    let date=iso?iso[1]:null;
+    if(iso){date=iso[1];}
+    // Col A fallback: "22 Jun 2026" — parse with explicit month map to avoid UTC issues
     if(!date){
-      const parsed=new Date(raw);
-      if(!isNaN(parsed))date=parsed.toISOString().slice(0,10);
+      const m=raw.match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
+      if(m){
+        const months={jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+        const mo=months[(m[2]||'').toLowerCase().slice(0,3)];
+        if(mo)date=`${m[3]}-${mo}-${String(parseInt(m[1],10)).padStart(2,'0')}`;
+      }
+    }
+    // Last resort: col B may have "Mon, Jun 22" — combine with year from col A
+    if(!date){
+      const b=(r[1]||'').trim();
+      const yr=raw.match(/(\d{4})/);
+      if(b&&yr){
+        const months={jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+        const mb=b.match(/([A-Za-z]+)\s+(\d{1,2})/);
+        if(mb){const mo=months[(mb[1]||'').toLowerCase().slice(0,3)];if(mo)date=`${yr[1]}-${mo}-${String(parseInt(mb[2],10)).padStart(2,'0')}`;}
+      }
     }
     return{
       raw,
       date:date||raw,
-      flightNo:(r[1]||'').trim(),
-      from:(r[2]||'').trim(),
-      to:(r[3]||'').trim(),
-      airline:(r[4]||'').trim(),
-      times:(r[5]||'').trim(),
+      flightNo:(r[2]||'').trim(),
+      from:(r[3]||'').trim(),
+      to:(r[4]||'').trim(),
+      airline:(r[5]||'').trim(),
+      times:(r[6]||'').trim(),
     };
   }).filter(f=>f.from||f.to);
 
