@@ -826,7 +826,7 @@ body.gallery-unlocked .gallery-add-btn.locked{background:var(--navy);color:var(-
     </div>
 
     <div style="background:#1a2e1a; border-radius:12px; overflow:hidden; margin-bottom:14px; position:relative;">
-      <div id="garden-cam-wrap" style="aspect-ratio:16/9; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; overflow:hidden;">
+      <div id="garden-cam-wrap" style="aspect-ratio:16/9; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; overflow:hidden; position:relative;">
         <img id="garden-cam-img" src="" alt="Garden cam" style="display:none; width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0;">
         <span id="garden-cam-placeholder-icon" style="font-size:36px;">🌿</span>
         <p id="garden-cam-placeholder-label" style="color:#86efac; font-size:12px; font-family:monospace; margin:0;">RING CAM — Garden</p>
@@ -2040,7 +2040,7 @@ function getTodayEntry(days){
 // ── OFFLINE (Service Worker) ──────────────────────────────────────────────────
 if('serviceWorker' in navigator){
   const swCode=`
-const CACHE='dom-wc26-v52';
+const CACHE='dom-wc26-v53';
 const SHELL=['./'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});
@@ -3126,7 +3126,7 @@ if(sessionStorage.getItem('dom_gallery_unlocked')==='1'){
 // ── GARDEN TAB ──────────────────────────────────────────────────
 // GARDEN_CAM_URL: paste a direct image URL here to show in the cam slot.
 // Leave as '' for the placeholder. Update in the GitHub editor with each new Ring snapshot.
-const GARDEN_CAM_URL = '';
+const GARDEN_CAM_URL = 'https://github.com/user-attachments/assets/1f21b871-dda3-48bf-b152-e487c306ddef';
 
 const GARDEN_STAGES = [
   {
