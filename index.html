@@ -83,12 +83,22 @@ body{min-height:100vh;overflow-x:hidden}
 .miles-bar-wrap{flex:1;height:6px;background:var(--border);border-radius:99px;overflow:hidden;margin-left:8px}
 .miles-bar{height:100%;background:var(--navy);border-radius:99px;transition:width 1s ease}
 
-/* TABS */
-.tabs{display:flex;border-bottom:2px solid var(--border);padding:0 20px;overflow-x:auto;scrollbar-width:none;background:var(--white);position:sticky;top:54px;z-index:100}
-.tabs::-webkit-scrollbar{display:none}
-.tab{font-size:13px;font-weight:500;color:var(--text-muted);padding:13px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color .2s,border-color .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-body)}
-.tab:hover{color:var(--navy)}
-.tab.active{color:var(--navy);border-bottom-color:var(--red);font-weight:600}
+/* BOTTOM NAV + SECONDARY TABS */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:150;background:var(--white);border-top:1px solid var(--border);display:flex;padding:6px 0 calc(6px + env(safe-area-inset-bottom));safe-area-inset-bottom:env(safe-area-inset-bottom)}
+.bottom-nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 2px;background:none;border:none;cursor:pointer;font-family:var(--font-body);color:var(--text-muted);transition:color .15s}
+.bottom-nav-btn:hover{color:var(--navy)}
+.bottom-nav-btn.active{color:var(--navy)}
+.bottom-nav-icon{font-size:22px;line-height:1}
+.bottom-nav-label{font-size:9px;font-weight:500;white-space:nowrap}
+.bottom-nav-dot{width:4px;height:4px;border-radius:50%;background:var(--red);margin:0 auto;opacity:0}
+.bottom-nav-btn.active .bottom-nav-dot{opacity:1}
+.secondary-tabs{display:flex;padding:6px 12px;gap:6px;overflow-x:auto;scrollbar-width:none;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:54px;z-index:100}
+.secondary-tabs::-webkit-scrollbar{display:none}
+.sec-tab{font-size:12px;font-weight:500;color:var(--text-muted);padding:5px 12px;border-radius:99px;white-space:nowrap;cursor:pointer;border:0.5px solid var(--border);background:var(--off-white);font-family:var(--font-body);transition:color .15s,background .15s,border-color .15s}
+.sec-tab:hover{color:var(--navy);border-color:var(--navy)}
+.sec-tab.active{color:var(--navy);background:var(--navy-light);border-color:var(--navy);font-weight:600}
+.panel{display:none;padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+.panel.active{display:block}
 
 /* LOADING */
 .loading-wrap{padding:40px 20px;text-align:center}
@@ -259,8 +269,7 @@ body{min-height:100vh;overflow-x:hidden}
 .site-footer{padding:20px;text-align:center;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border);margin-top:8px}
 .status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#22C55E;margin-right:5px;vertical-align:middle;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.panel{display:none}
-.panel.active{display:block}
+
 
 /* AWAKE INDICATOR */
 .awake-strip{padding:8px 20px;display:flex;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.06)}
@@ -367,19 +376,19 @@ body{min-height:100vh;overflow-x:hidden}
 .gf-score.tbc{font-family:var(--font-body);font-size:11px;color:var(--text-muted);font-weight:500}
 .gf-date{font-size:10px;color:var(--text-muted);min-width:52px;text-align:right}
 /* FLOATING MINI PLAYER */
-.float-player-btn{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));right:20px;z-index:500;width:52px;height:52px;border-radius:50%;background:#1DB954;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.25);transition:transform .2s,box-shadow .2s}
+.float-player-btn{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));right:20px;z-index:500;width:52px;height:52px;border-radius:50%;background:#1DB954;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.25);transition:transform .2s,box-shadow .2s}
 .float-player-btn:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(0,0,0,0.3)}
 .float-player-btn.attention{animation:btn-bounce 2.2s ease-in-out infinite}
 @keyframes btn-bounce{0%,100%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-16px) scale(1.06,0.94)}45%{transform:translateY(0) scale(0.94,1.06)}60%{transform:translateY(-7px) scale(1.02,0.98)}80%{transform:translateY(0) scale(1,1)}}
 .float-player-btn svg{width:22px;height:22px;fill:white}
 .float-player-btn.is-open svg.icon-play{display:none}
 .float-player-btn.is-open svg.icon-close{display:block!important}
-.float-player-panel{position:fixed;bottom:calc(82px + env(safe-area-inset-bottom));right:20px;z-index:499;width:320px;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.18);overflow:hidden;display:none;flex-direction:column}
+.float-player-panel{position:fixed;bottom:calc(146px + env(safe-area-inset-bottom));right:20px;z-index:499;width:320px;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.18);overflow:hidden;display:none;flex-direction:column}
 .float-player-panel.open{display:flex}
 .float-player-header{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--navy)}
 .float-player-title{font-size:12px;font-weight:600;color:white;letter-spacing:.04em}
 .float-player-name{font-size:11px;color:rgba(255,255,255,.6);margin-top:1px}
-.float-player-hint{position:fixed;bottom:calc(34px + env(safe-area-inset-bottom));right:80px;z-index:498;background:var(--navy);color:#fff;font-size:11px;font-weight:600;padding:6px 12px;border-radius:99px;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.25);animation:hint-bounce 2.2s ease-in-out infinite;pointer-events:none}
+.float-player-hint{position:fixed;bottom:calc(98px + env(safe-area-inset-bottom));right:80px;z-index:498;background:var(--navy);color:#fff;font-size:11px;font-weight:600;padding:6px 12px;border-radius:99px;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.25);animation:hint-bounce 2.2s ease-in-out infinite;pointer-events:none}
 .float-player-hint::after{content:'';position:absolute;right:-5px;top:50%;margin-top:-5px;width:0;height:0;border-left:6px solid var(--navy);border-top:5px solid transparent;border-bottom:5px solid transparent}
 .float-player-hint.hidden{display:none}
 @keyframes hint-bounce{0%,100%{transform:translateY(0)}30%{transform:translateY(-16px)}45%{transform:translateY(0)}60%{transform:translateY(-7px)}80%{transform:translateY(0)}}
@@ -565,28 +574,51 @@ body.gallery-unlocked .gallery-add-btn.locked{background:var(--navy);color:var(-
   <div class="countdown-timer" id="countdown-timer">--:--</div>
 </div>
 
-<!-- 3-DAY WEATHER FORECAST -->
-<div class="forecast-wrap" id="forecast-wrap" style="display:none;padding-top:16px">
-  <div class="forecast-grid" id="forecast-grid"></div>
-</div>
+<nav class="secondary-tabs">
+  <button class="sec-tab active" onclick="showTab('timeline',this)">Timeline</button>
+  <button class="sec-tab" onclick="showTab('map',this)">Map</button>
+  <button class="sec-tab" onclick="showTab('flights',this)">Flights</button>
+  <button class="sec-tab" onclick="showTab('route',this)">Route</button>
+  <button class="sec-tab" onclick="showTab('stadiums',this)">Stadiums</button>
+  <button class="sec-tab" onclick="showTab('bracket',this)">Bracket</button>
+  <button class="sec-tab" onclick="showTab('donate',this)">💚 Donate</button>
+  <button class="sec-tab" onclick="showTab('about',this)">About</button>
+  <button class="sec-tab" onclick="showTab('soundtrack',this)">Soundtrack</button>
+</nav>
 
-<nav class="tabs">
-  <button class="tab active" onclick="showTab('timeline',this)">Timeline</button>
-  <button class="tab" onclick="showTab('map',this)">Map</button>
-  <button class="tab" onclick="showTab('gallery',this)">📷 Gallery</button>
-  <button class="tab" onclick="showTab('wall',this)">💬 Wall</button>
-  <button class="tab" onclick="showTab('garden',this)">🌿 Garden</button>
-  <button class="tab" onclick="showTab('donate',this)">💚 Donate</button>
-  <button class="tab" onclick="showTab('flights',this)">Flights</button>
-  <button class="tab" onclick="showTab('route',this)">Route</button>
-  <button class="tab" onclick="showTab('stadiums',this)">Stadiums</button>
-  <button class="tab" onclick="showTab('history',this)">Results</button>
-  <button class="tab" onclick="showTab('bracket',this)">Bracket</button>
-  <button class="tab" onclick="showTab('about',this)">About</button>
-  <button class="tab" onclick="showTab('soundtrack',this)">Soundtrack</button>
+<nav class="bottom-nav" aria-label="Main navigation">
+  <button class="bottom-nav-btn active" onclick="showTab('timeline',this)" aria-label="Timeline">
+    <span class="bottom-nav-icon">📅</span>
+    <span class="bottom-nav-label">Timeline</span>
+    <span class="bottom-nav-dot"></span>
+  </button>
+  <button class="bottom-nav-btn" onclick="showTab('gallery',this)" aria-label="Gallery">
+    <span class="bottom-nav-icon">📷</span>
+    <span class="bottom-nav-label">Gallery</span>
+    <span class="bottom-nav-dot"></span>
+  </button>
+  <button class="bottom-nav-btn" onclick="showTab('wall',this)" aria-label="Wall">
+    <span class="bottom-nav-icon">💬</span>
+    <span class="bottom-nav-label">Wall</span>
+    <span class="bottom-nav-dot"></span>
+  </button>
+  <button class="bottom-nav-btn" onclick="showTab('history',this)" aria-label="Results">
+    <span class="bottom-nav-icon">⚽</span>
+    <span class="bottom-nav-label">Results</span>
+    <span class="bottom-nav-dot"></span>
+  </button>
+  <button class="bottom-nav-btn" onclick="showTab('garden',this)" aria-label="Garden">
+    <span class="bottom-nav-icon">🌿</span>
+    <span class="bottom-nav-label">Garden</span>
+    <span class="bottom-nav-dot"></span>
+  </button>
 </nav>
 
 <div id="tab-timeline" class="panel active">
+  <!-- 3-DAY WEATHER FORECAST — moved inside timeline tab -->
+  <div class="forecast-wrap" id="forecast-wrap" style="display:none;padding:12px 16px 0">
+    <div class="forecast-grid" id="forecast-grid"></div>
+  </div>
   <div class="flights-route-toggle">
     <button class="flights-route-btn" id="timeline-route-1st-btn" onclick="setTimelineRoute('1st')">Route 1<span class="flights-route-sub">If England 1st</span></button>
     <button class="flights-route-btn" id="timeline-route-2nd-btn" onclick="setTimelineRoute('2nd')">Route 2<span class="flights-route-sub">If England 2nd</span></button>
@@ -1994,9 +2026,17 @@ async function renderMap(){
 
 function showTab(name,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.sec-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav-btn').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-'+name)?.classList.add('active');
   if(btn)btn.classList.add('active');
+  // Sync active state across bottom-nav and secondary-tabs for same tab name
+  var needle="showTab('"+name+"'";
+  document.querySelectorAll('.bottom-nav-btn,.sec-tab').forEach(function(b){
+    if(b!==btn&&b.getAttribute('onclick')&&b.getAttribute('onclick').indexOf(needle)===0){
+      b.classList.add('active');
+    }
+  });
   if(name==='map'){
     // Wait for tab to be visible and sized, then init
     setTimeout(()=>{
@@ -2040,7 +2080,7 @@ function getTodayEntry(days){
 // ── OFFLINE (Service Worker) ──────────────────────────────────────────────────
 if('serviceWorker' in navigator){
   const swCode=`
-const CACHE='dom-wc26-v53';
+const CACHE='dom-wc26-v54';
 const SHELL=['./'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});
