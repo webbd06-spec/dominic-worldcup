@@ -892,6 +892,8 @@ body.gallery-unlocked .gallery-add-btn.locked{background:var(--navy);color:var(-
 const SHEETS_KEY='AIzaSyA32nyJoi_pf8E9PbY_TiVICjGEQlkY1sY';
 const SHEET_ID='1j_YJwB1ox3A43Bv8TBhohr4Mh3nLWFguJlPEUgEve-w';
 const FB_KEY='fc038b0fe93c4677b8f1f76b71de5397';
+// Always use local date (not UTC) to avoid midnight BST/EDT off-by-one errors
+function localDateStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 // api.football-data.org's CORS headers only allow http://localhost, blocking direct browser
 // calls from GitHub Pages — corsproxy.io fetches server-side and re-adds CORS headers,
 // and github.io origins are on its free allowlist.
@@ -1049,7 +1051,7 @@ function reachedFinal(){
 }
 
 function calcMiles(days){
-  const today=new Date().toISOString().slice(0,10);
+  const today=localDateStr();
   const baseLegs=currentRoute==='1st'?ROUTE_LEGS_1ST:ROUTE_LEGS_2ND;
   const order=currentRoute==='1st'?CITY_ORDER_1ST:CITY_ORDER_2ND;
   const final=reachedFinal();
@@ -1221,7 +1223,7 @@ function bracketDateToISO(d){
 }
 
 function buildHistory(){
-  const today=new Date().toISOString().slice(0,10);
+  const today=localDateStr();
   const matches=currentRoute==='1st'?RESULTS:RESULTS_2ND;
   const wrap=document.getElementById('history-inner');
   const played=matches.filter(m=>m.date<=today);
@@ -1589,7 +1591,7 @@ function tlActIcon(a){
 
 function renderTimelineCards(days,wrap,route){
   const idPrefix='det';
-  const today=new Date().toISOString().slice(0,10);
+  const today=localDateStr();
   if(!days.length){
     const hint=route==='2nd'
       ?'No Route 2 itinerary rows found yet.<br><span style="font-size:11px">In the Itinerary tab, add rows with Route = "2" or "Both" — columns: Date | City | Time | Activity | Location Name | Type | Lat | Lng | Route | Notes.</span>'
@@ -1815,7 +1817,7 @@ function buildMap(days){_mapDays=days;}
 async function renderMap(){
   const days=_mapDays;
   if(!days||!window.L)return;
-  const today=new Date().toISOString().slice(0,10);
+  const today=localDateStr();
   const visited=new Set();
   let currentCity='';
   for(const d of days){
@@ -1973,7 +1975,7 @@ async function renderMap(){
 
   // Markers
   for(const c of allCities){
-    const today2=new Date().toISOString().slice(0,10);
+    const today2=localDateStr();
     const onTrip=today2>='2026-06-22'&&today2<='2026-07-21';
     // While in flight, neither endpoint city gets the "here now" red dot
     const isCurr=!af&&onTrip?(currentCity&&(currentCity.includes(c.key)||c.key.includes(currentCity.split('\u2192')[0].trim()))):(c.key==='LONDON'&&!onTrip);
@@ -2037,7 +2039,7 @@ function buildRoutePanel(){
 }
 
 function getTodayEntry(days){
-  const today=new Date().toISOString().slice(0,10);
+  const today=localDateStr();
   if(today<'2026-06-17'||today>'2026-07-21')return null;
   return days.find(d=>d.date===today)||null;
 }
@@ -2045,7 +2047,7 @@ function getTodayEntry(days){
 // ── OFFLINE (Service Worker) ──────────────────────────────────────────────────
 if('serviceWorker' in navigator){
   const swCode=`
-const CACHE='dom-wc26-v58';
+const CACHE='dom-wc26-v59';
 const SHELL=['./'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});
@@ -2111,7 +2113,7 @@ function buildBracket(){
     {stage:'Semi-final',date:'14 Jul',match:'England \u2014 SF (TBC)',venue:'Mercedes-Benz Stadium, Atlanta',score:null,ko:'3:00pm ET',alt:'15 Jul \u2014 AT&T Stadium, Arlington'},
     {stage:'Final',date:'19 Jul',match:'England \u2014 Final',venue:'MetLife Stadium, New York',score:null,ko:'3:00pm ET'},
   ];
-  const today=new Date().toISOString().slice(0,10);
+  const today=localDateStr();
   let html='<div class="bracket-wrap">';
   let lastStage='';
   matches.forEach(m=>{
@@ -2150,7 +2152,7 @@ function buildBracket(){
 function buildStadiums(){
   const wrap=document.getElementById('stadiums-inner');
   if(!wrap)return;
-  const today=new Date().toISOString().slice(0,10);
+  const today=localDateStr();
   const is1st=currentRoute==='1st';
   const stadiums=[
     {icon:'🏟️',name:'Gillette Stadium',city:'Foxborough',date:'2026-06-23',match:'England vs Ghana',attended:false},
@@ -2422,7 +2424,7 @@ function renderFlightCards(rows,wrap){
     return;
   }
 
-  const today=new Date().toISOString().slice(0,10);
+  const today=localDateStr();
   // Sheet columns: A=raw date, B=formatted date ("Mon, Jun 22"), C=flight no,
   // D=from, E=to, F=airline, G=times
   // Skip header row
@@ -2622,7 +2624,7 @@ async function init(){
   const showVisible=show.filter(d=>!d.hidden);
   const todayEntry=getTodayEntry(show);
   const activeResults=currentRoute==='2nd'?RESULTS_2ND:RESULTS;
-  const today=new Date().toISOString().slice(0,10);
+  const today=localDateStr();
   const fallbackMatch=!todayEntry&&activeResults.find(r=>r.date===today);
   const takeoverEntry=todayEntry||(fallbackMatch?{isMatch:true,match:fallbackMatch.match,venue:fallbackMatch.venue,ko:fallbackMatch.ko}:null);
   showMatchdayTakeover(takeoverEntry);
@@ -3341,4 +3343,3 @@ init();
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </body>
 </html>
-
