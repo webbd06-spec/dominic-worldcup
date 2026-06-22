@@ -1409,7 +1409,7 @@ function parseItineraryNew(rows){
     let detail=[am,pm,eve].filter(Boolean).join('. ');
     if(isMatch&&ko)detail+=` Kick-off: ${ko}.`;
     if(isMatch&&venue)detail+=` Venue: ${venue}.`;
-    if(otherMatches.length){const os=otherMatches.map(a=>a.activity).filter(Boolean).join(', ');if(os)detail+=` Also today: ${os}.`;}
+    // other matches kept in otherMatches array for timeline expand only — not in detail
     return{date,city,am,pm,eve,ko,match,venue,isMatch,isFlight,isSpecial:false,summary,detail,route,hidden:false,amActs,pmActs,eveActs,otherMatches};
   }
 
@@ -1552,7 +1552,7 @@ async function buildHero(day){
       weatherHtml=`<div class="hero-card"><div class="hero-card-label">Right now</div><div class="hero-card-value weather-val">${wEmoji(code)} ${temp}°C</div><div class="hero-card-sub">${wDesc(code)}</div></div>`;
     }catch(e){}
   }
-  let html=`<div class="hero-card full"><div class="hero-card-label">Today</div><div class="hero-card-value">${day.detail||day.summary}</div></div>`;
+  let html=`<div class="hero-card full"><div class="hero-card-label">Today</div><div class="hero-card-value">${(day.summary||'').replace(/\s*—\s*/g,' · ')}</div></div>`;
   html+=weatherHtml;
   if(day.isMatch)html+=`<div class="hero-card"><div class="hero-card-label">Match</div><div class="hero-card-value match-val">⚽ ${day.match}</div><div class="hero-card-sub">KO ${day.ko}</div></div>`;
   if(day.isFlight)html+=`<div class="hero-card full"><div class="hero-card-label">Flight</div><div class="hero-card-value flight-val">${day.summary}</div></div>`;
@@ -2045,7 +2045,7 @@ function getTodayEntry(days){
 // ── OFFLINE (Service Worker) ──────────────────────────────────────────────────
 if('serviceWorker' in navigator){
   const swCode=`
-const CACHE='dom-wc26-v57';
+const CACHE='dom-wc26-v58';
 const SHELL=['./'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});
