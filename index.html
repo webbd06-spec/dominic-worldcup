@@ -439,6 +439,9 @@ body.admin-unlocked .wall-delete-btn{display:inline-block}
 .gallery-add-btn:hover{background:#01306E}
 .gallery-preview{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:10px}
 .gallery-preview-img{width:100%;max-height:280px;object-fit:contain;border-radius:8px;background:var(--off-white);margin-bottom:10px;display:block}
+.gallery-queue-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;-webkit-overflow-scrolling:touch}
+.gallery-queue-thumb{width:72px;height:72px;flex-shrink:0;object-fit:cover;border-radius:8px;border:2px solid var(--border);background:var(--off-white)}
+.gallery-queue-count{font-size:13px;color:var(--muted);margin-bottom:8px}
 .gallery-upload-actions{display:flex;gap:8px;margin-top:4px}
 .gallery-cancel-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:13px;font-weight:500;font-family:var(--font-body);color:var(--text-secondary);cursor:pointer}
 .gallery-cancel-btn:hover{border-color:var(--border-mid)}
@@ -777,12 +780,13 @@ body.gallery-unlocked .gallery-add-btn.locked{background:var(--navy);color:var(-
       <div id="gallery-unlocked-section" style="display:none">
         <div class="gallery-unlocked-badge">✓ Unlocked — upload &amp; delete enabled</div>
       </div>
-      <input type="file" id="gallery-file-input" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)">
+      <input type="file" id="gallery-file-input" accept="image/*" multiple style="display:none" onchange="handlePhotoSelect(event)">
       <button class="gallery-add-btn locked" id="gallery-add-btn" onclick="document.getElementById('gallery-file-input').click()">📷 Add a photo</button>
       <div class="gallery-preview" id="gallery-preview" style="display:none">
-        <img class="gallery-preview-img" id="gallery-preview-img" alt="">
+        <div class="gallery-queue-count" id="gallery-queue-count"></div>
+        <div class="gallery-queue-strip" id="gallery-queue-strip"></div>
         <input class="wall-input" id="gallery-name" type="text" placeholder="Your name" maxlength="30" autocomplete="off">
-        <input class="wall-input" id="gallery-caption" type="text" placeholder="Caption (optional)" maxlength="120" autocomplete="off">
+        <input class="wall-input" id="gallery-caption" type="text" placeholder="Caption for all photos (optional)" maxlength="120" autocomplete="off">
         <div class="gallery-upload-actions">
           <button class="wall-submit" id="gallery-upload-btn" onclick="uploadPhoto()">Upload</button>
           <button class="gallery-cancel-btn" onclick="cancelUpload()">Cancel</button>
@@ -2065,7 +2069,7 @@ function getTodayEntry(days){
 // ── OFFLINE (Service Worker) ──────────────────────────────────────────────────
 if('serviceWorker' in navigator){
   const swCode=`
-const CACHE='dom-wc26-v61';
+const CACHE='dom-wc26-v62';
 const SHELL=['./'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});
@@ -2869,8 +2873,7 @@ const GALLERY_PASSWORD='england2026'; // change to your preferred upload passwor
 let galleryUnlocked=false; // sessionStorage-backed; clears when tab closes
 
 let galleryInitialised=false;
-let pendingPhotoBlob=null;        // resized JPEG blob waiting to be uploaded
-let pendingPhotoPreviewUrl=null;  // object URL for the preview <img>
+let pendingQueue=[];              // [{blob, previewUrl}] — items waiting to upload
 const GALLERY_LIMIT=200; // most recent photo records loaded (metadata is tiny)
 
 // Resize an image file down to a sensible upload size — keeps mobile uploads
@@ -2903,39 +2906,49 @@ function compressImage(file){
 }
 
 async function handlePhotoSelect(event){
-  const file=event.target.files&&event.target.files[0];
+  const files=Array.from(event.target.files||[]);
   const errEl=document.getElementById('gallery-error');
   errEl.textContent='';
-  if(!file)return;
-  if(!file.type.startsWith('image/')){
-    errEl.textContent='Please choose an image file.';
-    return;
-  }
+  if(!files.length)return;
+  const nonImages=files.filter(f=>!f.type.startsWith('image/'));
+  if(nonImages.length){errEl.textContent='Please choose image files only.';return;}
   const progress=document.getElementById('gallery-progress');
   const preview=document.getElementById('gallery-preview');
-  const previewImg=document.getElementById('gallery-preview-img');
+  const strip=document.getElementById('gallery-queue-strip');
+  const countEl=document.getElementById('gallery-queue-count');
   progress.style.display='block';
   progress.textContent='Preparing…';
-  preview.style.display='block';
+  preview.style.display='none';
   document.getElementById('gallery-add-btn').style.display='none';
+  pendingQueue.forEach(item=>URL.revokeObjectURL(item.previewUrl));
+  pendingQueue=[];
+  strip.innerHTML='';
   try{
-    pendingPhotoBlob=await compressImage(file);
-    if(pendingPhotoPreviewUrl)URL.revokeObjectURL(pendingPhotoPreviewUrl);
-    pendingPhotoPreviewUrl=URL.createObjectURL(pendingPhotoBlob);
-    previewImg.src=pendingPhotoPreviewUrl;
+    for(let i=0;i<files.length;i++){
+      progress.textContent=`Preparing ${i+1} of ${files.length}…`;
+      const blob=await compressImage(files[i]);
+      const previewUrl=URL.createObjectURL(blob);
+      pendingQueue.push({blob,previewUrl});
+      const img=document.createElement('img');
+      img.className='gallery-queue-thumb';
+      img.src=previewUrl;
+      strip.appendChild(img);
+    }
+    countEl.textContent=pendingQueue.length===1?'1 photo ready to upload':`${pendingQueue.length} photos ready to upload`;
     progress.style.display='none';
-    // Prefill name from last time
+    preview.style.display='block';
     const savedName=localStorage.getItem('dom_gallery_name');
     if(savedName)document.getElementById('gallery-name').value=savedName;
   }catch(e){
-    errEl.textContent='Could not process that image — try another.';
+    errEl.textContent='Could not process one or more images — try again.';
     cancelUpload();
   }
 }
 
 function cancelUpload(){
-  if(pendingPhotoPreviewUrl){URL.revokeObjectURL(pendingPhotoPreviewUrl);pendingPhotoPreviewUrl=null;}
-  pendingPhotoBlob=null;
+  pendingQueue.forEach(item=>URL.revokeObjectURL(item.previewUrl));
+  pendingQueue=[];
+  document.getElementById('gallery-queue-strip').innerHTML='';
   document.getElementById('gallery-preview').style.display='none';
   document.getElementById('gallery-add-btn').style.display='block';
   document.getElementById('gallery-file-input').value='';
@@ -2949,36 +2962,41 @@ async function uploadPhoto(){
   const name=(document.getElementById('gallery-name').value||'').trim();
   const caption=(document.getElementById('gallery-caption').value||'').trim();
   if(!name){errEl.textContent='Add your name first ✏️';return;}
-  if(!pendingPhotoBlob){errEl.textContent='Choose a photo first.';return;}
+  if(!pendingQueue.length){errEl.textContent='Choose at least one photo first.';return;}
   if(CLOUDINARY_CLOUD_NAME==='YOUR_CLOUD_NAME'){errEl.textContent='Gallery not configured yet.';return;}
   if(!initFirebase()){errEl.textContent='Gallery feed not configured yet.';return;}
 
   const btn=document.getElementById('gallery-upload-btn');
-  btn.disabled=true;btn.textContent='Uploading…';
+  const progress=document.getElementById('gallery-progress');
+  const total=pendingQueue.length;
+  btn.disabled=true;
+  progress.style.display='block';
+
+  const city=(()=>{const d=_allDays&&getTodayEntry(_allDays.filter(x=>x.route===currentRoute));return d?niceCity(d.city):'';})();
 
   try{
-    const form=new FormData();
-    form.append('file',pendingPhotoBlob,'photo.jpg');
-    form.append('upload_preset',CLOUDINARY_UPLOAD_PRESET);
-    const res=await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,{method:'POST',body:form});
-    if(!res.ok){
-      const errBody=await res.json().catch(()=>null);
-      throw new Error((errBody&&errBody.error&&errBody.error.message)||('Upload failed ('+res.status+')'));
+    for(let i=0;i<total;i++){
+      btn.textContent=total===1?'Uploading…':`Uploading ${i+1} of ${total}…`;
+      progress.textContent=total===1?'Uploading…':`Uploading ${i+1} of ${total}…`;
+      const form=new FormData();
+      form.append('file',pendingQueue[i].blob,'photo.jpg');
+      form.append('upload_preset',CLOUDINARY_UPLOAD_PRESET);
+      const res=await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,{method:'POST',body:form});
+      if(!res.ok){
+        const errBody=await res.json().catch(()=>null);
+        throw new Error((errBody&&errBody.error&&errBody.error.message)||(`Upload failed on photo ${i+1} (${res.status})`));
+      }
+      const data=await res.json();
+      await fbDB.ref('gallery/photos').push().set({name,caption,url:data.secure_url,ts:Date.now(),city});
     }
-    const data=await res.json();
-    await fbDB.ref('gallery/photos').push().set({
-      name,
-      caption,
-      url:data.secure_url,
-      ts:Date.now(),
-      city:(()=>{const d=_allDays&&getTodayEntry(_allDays.filter(x=>x.route===currentRoute));return d?niceCity(d.city):'';})(),
-    });
     localStorage.setItem('dom_gallery_name',name);
     btn.disabled=false;btn.textContent='Upload';
+    progress.style.display='none';
     cancelUpload();
   }catch(e){
     errEl.textContent='Failed to upload: '+e.message;
     btn.disabled=false;btn.textContent='Upload';
+    progress.style.display='none';
   }
 }
 
