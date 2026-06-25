@@ -1378,8 +1378,8 @@ function parseItineraryNew(rows){
     const rv=routeVal.toLowerCase();
     const addTo1=rv==='both'||rv==='1'||rv==='route 1'||rv==='route1'||rv==='';
     const addTo2=rv==='both'||rv==='2'||rv==='route 2'||rv==='route2'||rv==='';
-    if(addTo1){if(!byDate1[date])byDate1[date]={city,activities:[]};byDate1[date].activities.push(act);}
-    if(addTo2){if(!byDate2[date])byDate2[date]={city,activities:[]};byDate2[date].activities.push(act);}
+    if(addTo1){if(!byDate1[date])byDate1[date]={city,activities:[]};else byDate1[date].city=city;byDate1[date].activities.push(act);}
+    if(addTo2){if(!byDate2[date])byDate2[date]={city,activities:[]};else byDate2[date].city=city;byDate2[date].activities.push(act);}
   }
 
   // Convert a date bucket into a day object
@@ -2079,7 +2079,7 @@ function getTodayEntry(days){
 // ── OFFLINE (Service Worker) ──────────────────────────────────────────────────
 if('serviceWorker' in navigator){
   const swCode=`
-const CACHE='dom-wc26-v63';
+const CACHE='dom-wc26-v64';
 const SHELL=['./'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});
