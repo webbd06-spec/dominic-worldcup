@@ -595,18 +595,10 @@ body.gallery-unlocked .gallery-add-btn.locked{background:var(--navy);color:var(-
   <div class="forecast-wrap" id="forecast-wrap" style="display:none;padding:12px 16px 0">
     <div class="forecast-grid" id="forecast-grid"></div>
   </div>
-  <div class="flights-route-toggle">
-    <button class="flights-route-btn" id="timeline-route-1st-btn" onclick="setTimelineRoute('1st')">Route 1<span class="flights-route-sub">If England 1st</span></button>
-    <button class="flights-route-btn" id="timeline-route-2nd-btn" onclick="setTimelineRoute('2nd')">Route 2<span class="flights-route-sub">If England 2nd</span></button>
-  </div>
   <div id="timeline-inner"></div>
 </div>
 
 <div id="tab-map" class="panel">
-  <div class="flights-route-toggle">
-    <button class="flights-route-btn active" id="map-route-1st-btn" onclick="setMapRoute('1st')">Route 1<span class="flights-route-sub">If England 1st</span></button>
-    <button class="flights-route-btn" id="map-route-2nd-btn" onclick="setMapRoute('2nd')">Route 2<span class="flights-route-sub">If England 2nd</span></button>
-  </div>
   <div class="map-wrap">
     <div class="map-container">
       <div class="map-header">
@@ -639,10 +631,6 @@ body.gallery-unlocked .gallery-add-btn.locked{background:var(--navy);color:var(-
 <div id="tab-stadiums" class="panel"><div id="stadiums-inner" style="padding:16px 20px"></div></div>
 <div id="tab-soundtrack" class="panel"><div id="soundtrack-inner" style="padding:16px 20px"></div></div>
 <div id="tab-flights" class="panel">
-  <div class="flights-route-toggle">
-    <button class="flights-route-btn" id="flights-route-1st-btn" onclick="setFlightsRoute('1st')">Route 1<span class="flights-route-sub">If England 1st</span></button>
-    <button class="flights-route-btn" id="flights-route-2nd-btn" onclick="setFlightsRoute('2nd')">Route 2<span class="flights-route-sub">If England 2nd</span></button>
-  </div>
   <div id="flights-inner" style="padding:16px 20px"></div>
 </div>
 <div id="tab-route" class="panel"><div class="route-panel" id="route-panel"></div></div>
@@ -655,9 +643,9 @@ body.gallery-unlocked .gallery-add-btn.locked{background:var(--navy);color:var(-
       <div class="stat-card"><div class="stat-num">Up to 8</div><div class="stat-label">England matches</div></div>
       <div class="stat-card"><div class="stat-num">1</div><div class="stat-label">World Cup</div></div>
     </div>
-    <div class="about-card"><h3>The trip</h3><p>Dominic is following England through the 2026 FIFA World Cup across the USA and Mexico — from the group stage in Boston and New York, through the knockouts to the Quarter-Final. Route 1 (1st in group): Atlanta → Mexico City → Miami. Route 2 (2nd in group): Toronto → Dallas. If England reach the Final at MetLife on 19 July, Dom flies back from London for it.</p></div>
+    <div class="about-card"><h3>The trip</h3><p>Dominic is following England through the 2026 FIFA World Cup across the USA and Mexico — from the group stage in Boston and New York, through the knockouts in Atlanta, Mexico City and on to the Quarter-Final in Miami. If England reach the Final at MetLife on 19 July, Dom flies back from London for it.</p></div>
     <div class="about-card"><h3>The route</h3><p>The exact knockout route depends on whether England finish 1st or 2nd in Group L on 27 June. If 1st: Atlanta → Mexico City → Miami. If 2nd: Toronto → Dallas. This tracker updates automatically.</p></div>
-    <div class="about-card"><h3>This page</h3><p>Updates automatically every time it loads — pulling the latest itinerary directly from Dominic's planning spreadsheet. Weather is live. Route switches automatically after 27 June based on England's result.</p></div>
+    <div class="about-card"><h3>This page</h3><p>Updates automatically every time it loads — pulling the latest itinerary directly from Dominic's planning spreadsheet. Weather is live.</p></div>
   </div>
 </div>
 
@@ -2049,25 +2037,10 @@ function showTab(name,btn){
 function buildRoutePanel(){
   const panel=document.getElementById('route-panel');
   const r1=[{icon:'✈️',city:'London',dates:'Mon 22 Jun',match:''},{icon:'🇺🇸',city:'Boston',dates:'22–25 Jun',match:'England vs Ghana · 23 Jun · 4:00pm ET'},{icon:'🇺🇸',city:'New York City',dates:'25–29 Jun',match:'England vs Panama · 27 Jun · 5:00pm ET'},{icon:'🇺🇸',city:'Atlanta',dates:'29 Jun – 2 Jul',match:'England R32 · 1 Jul · 12:00pm ET'},{icon:'🇲🇽',city:'Mexico City',dates:'2–6 Jul',match:'England R16 at Azteca · 5 Jul · 7:00pm CT'},{icon:'🇺🇸',city:'Miami',dates:'6–14 Jul',match:'England QF · 11 Jul · 9:00pm ET'},{icon:'🇺🇸',city:'Atlanta (if SF)',dates:'14 Jul',match:'England SF · Mercedes-Benz Stadium · 3:00pm ET — Not attending'},{icon:'🇺🇸',city:'New York (if Final)',dates:'19 Jul',match:'England Final · MetLife · 3:00pm ET'},{icon:'✈️',city:'Home to London',dates:'After Final',match:''}];
-  const r2=[{icon:'✈️',city:'London',dates:'Mon 22 Jun',match:''},{icon:'🇺🇸',city:'Boston',dates:'22–25 Jun',match:'England vs Ghana · 23 Jun · 4:00pm ET'},{icon:'🇺🇸',city:'New York City',dates:'25–29 Jun',match:'England vs Panama · 27 Jun · 5:00pm ET'},{icon:'🇨🇦',city:'Toronto',dates:'29 Jun – 3 Jul',match:'England R32 at BMO Field · 2 Jul · 6:00pm ET'},{icon:'🇺🇸',city:'Dallas',dates:'3–7 Jul',match:'England R16 at AT&T Stadium · 6 Jul · 3:00pm CT'},{icon:'🇺🇸',city:'QF venue TBD',dates:'9–11 Jul',match:'England QF · Venue TBD · 11 Jul'},{icon:'🇺🇸',city:'Dallas (if SF)',dates:'15 Jul',match:'England SF · AT&T Stadium · 3:00pm ET — Not attending'},{icon:'🇺🇸',city:'New York (if Final)',dates:'19 Jul',match:'England Final · MetLife · 3:00pm ET'},{icon:'✈️',city:'Home to London',dates:'After Final',match:''}];
   const sh=s=>`<div class="route-stops">${s.map(x=>`<div class="route-stop"><div class="rs-icon">${x.icon}</div><div><div class="rs-city">${x.city}</div><div class="rs-dates">${x.dates}</div>${x.match?`<div class="rs-match">⚽ ${x.match}</div>`:''}</div></div>`).join('')}</div>`;
-    const now=new Date();
-  const routeConfirmed=now>new Date('2026-06-27T23:00:00-05:00');
-  const active1=currentRoute==='1st';
-  const dim='opacity:.45;filter:grayscale(.6)';
-  const activeNote=routeConfirmed
-    ?(active1?`<div style="font-size:11px;color:#1D9E75;font-weight:600;padding:8px 0">✓ This is England's active route</div>`:`<div style="font-size:11px;color:var(--text-muted);padding:8px 0">England finished 2nd — this route not taken</div>`)
-    :'';
-  const activeNote2=routeConfirmed
-    ?(active1?`<div style="font-size:11px;color:var(--text-muted);padding:8px 0">England finished 1st — this route not taken</div>`:`<div style="font-size:11px;color:#1D9E75;font-weight:600;padding:8px 0">✓ This is England's active route</div>`)
-    :'';
-  panel.innerHTML=`<div class="route-section" style="${routeConfirmed&&!active1?dim:''}">`
-    +`<div class="route-heading">If England finish 1st <span class="rt-badge rt-1st">Atlanta route</span></div>`
-    +`<div class="route-sub">England top Group L on 27 June</div>${activeNote}${sh(r1)}</div>`
-    +`<div class="route-section" style="${routeConfirmed&&active1?dim:''}">`
-    +`<div class="route-heading">If England finish 2nd <span class="rt-badge rt-2nd">Toronto route</span></div>`
-    +`<div class="route-sub">England runner-up on 27 June</div>${activeNote2}${sh(r2)}</div>`
-    +`<div class="route-note">${routeConfirmed?'Route confirmed after Panama game on 27 June.':'Route confirmed after England vs Panama on 27 June.'} This tracker switches automatically.</div>`;
+  panel.innerHTML=`<div class="route-section">`
+    +`<div class="route-heading">England's route <span class="rt-badge rt-1st">Atlanta route</span></div>`
+    +`<div class="route-sub">Confirmed — England topped Group L on 27 June</div>${sh(r1)}</div>`;
 }
 
 function getTodayEntry(days){
@@ -2079,7 +2052,7 @@ function getTodayEntry(days){
 // ── OFFLINE (Service Worker) ──────────────────────────────────────────────────
 if('serviceWorker' in navigator){
   const swCode=`
-const CACHE='dom-wc26-v64';
+const CACHE='dom-wc26-v65';
 const SHELL=['./'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});
@@ -2170,7 +2143,6 @@ function buildBracket(){
       <div style="flex:1">
         <div class="bracket-teams">${m.match}</div>
         <div class="bracket-venue">${m.date} \u00b7 ${m.venue} \u00b7 KO ${m.ko}</div>
-        ${m.alt?(currentRoute==='2nd'?`<div class="bracket-venue" style="color:#1D9E75;font-weight:600">✓ Active route: ${m.alt}</div>`:`<div class="bracket-venue" style="color:var(--text-muted)">2nd place route: ${m.alt}</div>`):''}
       </div>
       ${scoreHtml}
     </div>`;
